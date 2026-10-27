@@ -10,16 +10,17 @@ import { DashboardPage } from './pages/DashboardPage';
 import { ActivityPage } from './pages/ActivityPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { AdminDashboardPage } from './pages/AdminDashboardPage';
+import { AdminLoginPage } from './pages/AdminLoginPage';
 import { AuthModalPage } from './pages/LoginPage';
 
 const ProtectedAdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, isAuthenticated, activeRole } = useApp();
 
-  // If not logged in or role is 'student', block access and redirect
+  // If not logged in or role is 'student', redirect to dedicated admin login
   const isAdminOrStaff = isAuthenticated && (activeRole === 'admin' || activeRole === 'security_staff' || user.role === 'admin' || user.role === 'security_staff');
 
   if (!isAdminOrStaff) {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to="/admin/login" replace />;
   }
 
   return <>{children}</>;
@@ -27,12 +28,11 @@ const ProtectedAdminRoute: React.FC<{ children: React.ReactNode }> = ({ children
 
 /**
  * Wrapper that conditionally hides the student navigation
- * when the admin dashboard is active. The admin panel has its
- * own header and doesn't need the student chrome.
+ * when the admin dashboard or admin login is active.
  */
 const AppShell: React.FC = () => {
   const location = useLocation();
-  const isAdminRoute = location.pathname === '/admin';
+  const isAdminRoute = location.pathname.startsWith('/admin');
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] flex flex-col text-slate-900">
@@ -43,6 +43,7 @@ const AppShell: React.FC = () => {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<AuthModalPage />} />
+          <Route path="/admin/login" element={<AdminLoginPage />} />
           <Route path="/explore" element={<ExplorePage />} />
           <Route path="/report" element={<ReportItemPage />} />
           <Route path="/item/:id" element={<ItemDetailsPage />} />

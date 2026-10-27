@@ -1,6 +1,86 @@
-import { Response } from 'express';
+import { Request, Response } from 'express';
+import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
 import { pool } from '../db/index.js';
+import { config } from '../config/index.js';
 import { RequestWithUser } from '../middleware/auth.js';
+
+/**
+ * Dedicated Admin Portal Login
+ * Rejects non-admin / non-staff users even with valid password.
+ */
+export async function adminLogin(req: Request, res: Response): Promise<void> {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    res.status(400).json({ error: 'Admin email and master access key are required.' });
+    return;
+  }
+
+  try {
+    const userRes = await pool.query(
+      `SELECT id, email, password_hash, full_name, student_id, department, role, avatar_url
+       FROM users WHERE email = $1`,
+      [email.toLowerCase().trim()]
+    );
+
+    if (userRes.rows.length === 0) {
+      res.status(401).json({ error: 'Invalid admin credentials or unauthorized account.' });
+      return;
+    }
+
+    const user = userRes.rows[0];
+
+    // Explicit role authorization check
+    if (user.role !== 'admin' && user.role !== 'security_staff') {
+      res.status(403).json({ error: 'Access Denied: This portal is restricted to authorized Security & Admin staff only.' });
+      return;
+    }
+
+    const match = await bcrypt.compare(password, user.password_hash);
+    if (!match) {
+      res.status(401).json({ error: 'Invalid admin credentials or master access key.' });
+      return;
+    }
+
+    const token = jwt.sign(
+      {
+        id: user.id,
+        email: user.email,
+        fullName: user.full_name,
+        studentId: user.student_id,
+        role: user.role,
+      },
+      config.jwtSecret,
+      { expiresIn: config.jwtExpiresIn as any }
+    );
+
+    // Audit log admin login
+    await pool.query(
+      `INSERT INTO audit_events (actor_id, action, entity_type, entity_id, metadata)
+       VALUES ($1, 'ADMIN_LOGIN', 'auth', $1, $2)`,
+      [user.id, JSON.stringify({ ip: req.ip, userAgent: req.headers['user-agent'] })]
+    );
+
+    res.json({
+      message: 'Admin authorization granted.',
+      token,
+      user: {
+        id: user.id,
+        email: user.email,
+        fullName: user.full_name,
+        studentId: user.student_id,
+        department: user.department,
+        role: user.role,
+        avatarUrl: user.avatar_url
+      }
+    });
+  } catch (err: any) {
+    console.error('adminLogin error:', err);
+    res.status(500).json({ error: 'Admin authentication service error.' });
+  }
+}
+
 
 /**
  * Admin Dashboard Stats - Aggregates real-time metrics from DB

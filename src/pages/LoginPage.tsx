@@ -44,18 +44,6 @@ export const AuthModalPage: React.FC = () => {
     }
   };
 
-  const handleQuickDemoFill = (role: 'student' | 'admin') => {
-    if (role === 'admin') {
-      setEmail('admin@somaiya.edu');
-      setPassword('password123');
-    } else {
-      setEmail('alex@somaiya.edu');
-      setPassword('password123');
-    }
-    setIsRegister(false);
-    setError(null);
-  };
-
   if (isAuthenticated && user) {
     return (
       <div className="min-h-[calc(100vh-140px)] flex items-center justify-center px-4 py-12">
@@ -284,33 +272,8 @@ export const AuthModalPage: React.FC = () => {
           )}
         </div>
 
-        {/* Demo Fast Logins for Practical Evaluation */}
-        <div className="pt-3 border-t border-dashed border-[#E7EAF1] space-y-2.5 bg-slate-50/60 p-4 rounded-2xl">
-          <div className="flex items-center justify-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-[#70798B]">
-            <KeyRound className="w-3.5 h-3.5 text-amber-600" />
-            <span>Examiner One-Click Demo Logins</span>
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              type="button"
-              onClick={() => handleQuickDemoFill('student')}
-              className="px-3 py-2 rounded-xl bg-white hover:bg-slate-100 border border-[#E7EAF1] text-[11px] font-semibold text-[#172033] transition-all shadow-xs flex items-center justify-center gap-1.5"
-            >
-              <User className="w-3.5 h-3.5 text-[#243B8A]" />
-              <span>Fill Student (Alex)</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => handleQuickDemoFill('admin')}
-              className="px-3 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 border border-amber-200 text-[11px] font-semibold text-amber-900 transition-all shadow-xs flex items-center justify-center gap-1.5"
-            >
-              <Shield className="w-3.5 h-3.5 text-amber-600" />
-              <span>Fill Admin Desk</span>
-            </button>
-          </div>
-        </div>
-
       </div>
     </div>
   );
 };
+

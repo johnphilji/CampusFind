@@ -93,6 +93,13 @@ class ApiClient {
   }
 
   // --- Admin endpoints ---
+  public adminLogin(data: { email: string; password: string }) {
+    return this.request<{ message: string; token: string; user: any }>('/admin/login', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
   public getAdminStats() {
     return this.request<{ stats: any; recentReports: any[]; auditLog: any[] }>('/admin/stats');
   }
