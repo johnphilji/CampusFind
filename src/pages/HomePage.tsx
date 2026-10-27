@@ -70,97 +70,64 @@ export const HomePage: React.FC = () => {
   };
 
   return (
-    <div className="pb-24 md:pb-16 space-y-4 sm:space-y-6 md:space-y-8 max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 pt-3 sm:pt-4">
-      {/* Mobile Top Welcome & Live QR Desk */}
-      <div className="md:hidden flex items-center justify-between py-1 bg-white rounded-2xl p-3 border border-slate-200/80 shadow-xs">
-        <div className="flex items-center gap-2.5 min-w-0">
+    <div className="pb-24 md:pb-16 space-y-4 sm:space-y-6 md:space-y-8 max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 pt-2 sm:pt-4">
+      {/* Mobile Top App Bar */}
+      <div className="md:hidden flex items-center justify-between py-2 px-1">
+        <div className="flex items-center gap-2.5">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#1E3A8A] to-[#0284C7] text-white flex items-center justify-center shadow-md">
+            <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <path d="m10 15 5-3-5-3v6Z" />
+            </svg>
+          </div>
+          <div>
+            <h1 className="text-base font-extrabold tracking-tight text-[#1E3A8A] leading-none">CampusFind</h1>
+            <span className="text-[10px] text-slate-500 font-medium">College Lost & Found</span>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
           <img
             src={user.avatar}
             alt={user.name}
-            className="w-9 h-9 rounded-full object-cover ring-2 ring-blue-500/20 flex-shrink-0"
+            className="w-8 h-8 rounded-full object-cover ring-2 ring-blue-500/20"
           />
-          <div className="min-w-0">
-            <span className="text-[11px] text-slate-500 font-medium block leading-none">Welcome back,</span>
-            <h2 className="text-sm font-bold text-slate-900 tracking-tight truncate mt-0.5">
-              {user.name.split(' ')[0]} 👋
-            </h2>
-          </div>
         </div>
-
-        <Link
-          to="/report?type=found&location=Central+Library"
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-50 text-blue-800 text-xs font-semibold flex-shrink-0 active:scale-95 transition-transform"
-        >
-          <QrCode className="w-3.5 h-3.5 text-blue-600" />
-          <span>Library QR</span>
-        </Link>
-      </div>
-
-      {/* Institutional SOP Status Notice Banner */}
-      <div className="bg-slate-900 text-slate-100 rounded-2xl px-4 py-2.5 sm:py-3 flex flex-wrap items-center justify-between gap-2 shadow-sm border border-slate-800 text-xs">
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 font-semibold text-[11px] border border-blue-400/30">
-            <Lock className="w-3 h-3 text-blue-400" /> Real-World SOP Protocol Active
-          </span>
-          <span className="text-slate-300 text-[11px] sm:text-xs">
-            High-value items routed to Security Dual-Custody Safe • 48hr hygiene rule for perishables.
-          </span>
-        </div>
-        <Link
-          to="/explore"
-          className="text-sky-300 hover:text-white font-semibold text-[11px] flex items-center gap-1 ml-auto sm:ml-0"
-        >
-          <span>Custody Locations</span>
-          <ArrowRight className="w-3 h-3" />
-        </Link>
       </div>
 
       {/* Hero Banner Section */}
-      <div className="relative rounded-3xl overflow-hidden bg-gradient-to-br from-[#0F172A] via-[#1E3A8A] to-[#0284C7] text-white p-4 sm:p-7 md:p-10 shadow-xl shadow-blue-900/15">
-        {/* Subtle Decorative Grid */}
-        <div className="absolute inset-0 opacity-10 pointer-events-none bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:16px_16px]" />
-
-        <div className="relative z-10 max-w-2xl space-y-2.5 sm:space-y-4">
-          <div className="inline-flex items-center gap-1.5 sm:gap-2 px-2.5 py-1 rounded-full bg-white/15 backdrop-blur-md text-[11px] sm:text-xs font-semibold tracking-wide text-white/90 border border-white/20">
+      <div className="relative rounded-3xl overflow-hidden bg-gradient-to-br from-[#0F172A] via-[#1E3A8A] to-[#0284C7] text-white p-4 sm:p-7 md:p-10 shadow-lg shadow-blue-900/15">
+        <div className="relative z-10 max-w-2xl space-y-3">
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/15 backdrop-blur-md text-[11px] font-semibold tracking-wide text-white/90 border border-white/20">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-            Official Campus Lost & Found System
+            Campus Lost & Found
           </div>
 
-          <h1 className="text-xl sm:text-3xl md:text-5xl font-extrabold tracking-tight leading-tight">
+          <h2 className="text-xl sm:text-3xl md:text-5xl font-extrabold tracking-tight leading-snug">
             Lost something on campus? <br className="hidden sm:inline" />
-            <span className="text-sky-200">Let's track & recover it.</span>
-          </h1>
-
-          <p className="text-xs sm:text-sm md:text-base text-white/85 max-w-lg leading-relaxed">
-            Your university network connects students, staff, and campus security for verified, secure item custody.
-          </p>
+            <span className="text-sky-200">Let's find & return it.</span>
+          </h2>
 
           {/* Search Input Bar */}
-          <form onSubmit={handleSearchSubmit} className="pt-1 sm:pt-2">
+          <form onSubmit={handleSearchSubmit} className="pt-1">
             <div className="relative flex items-center">
-              <Search className="absolute left-3.5 sm:left-4 w-4 h-4 sm:w-5 sm:h-5 text-[#70798B] flex-shrink-0" />
+              <Search className="absolute left-3.5 w-4 h-4 text-slate-400 flex-shrink-0" />
               <input
                 type="text"
-                placeholder="Search bags, ID cards, keys, boAt earphones..."
+                placeholder="Search bags, ID cards, keys, earphones..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 sm:pl-12 pr-20 sm:pr-28 py-2.5 sm:py-3.5 rounded-2xl bg-white text-[#172033] placeholder:text-[#70798B] font-medium text-xs sm:text-sm md:text-base shadow-lg focus:outline-none focus:ring-4 focus:ring-white/30"
+                className="w-full pl-10 pr-24 py-2.5 sm:py-3.5 rounded-2xl bg-white text-slate-900 placeholder:text-slate-400 font-medium text-xs sm:text-sm shadow-md focus:outline-none focus:ring-2 focus:ring-blue-400"
               />
               <button
                 type="submit"
-                className="absolute right-1.5 sm:right-2 top-1.5 sm:top-2 bottom-1.5 sm:bottom-2 bg-[#243B8A] hover:bg-[#1C2C6A] text-white px-3 sm:px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1 sm:gap-1.5 active:scale-95"
+                className="absolute right-1.5 top-1.5 bottom-1.5 bg-[#1E3A8A] hover:bg-blue-800 text-white px-3 sm:px-4 rounded-xl text-xs font-semibold transition-all flex items-center gap-1 active:scale-95"
               >
                 <span>Search</span>
-                <ArrowRight className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </div>
           </form>
-
-          {/* Campus QR notice */}
-          <div className="pt-0.5 flex items-center gap-2 text-[11px] sm:text-xs text-white/75">
-            <QrCode className="w-3.5 h-3.5 text-[#0F9D91] flex-shrink-0" />
-            <span className="truncate">Scanned a physical campus QR code? Campus zone is automatically selected.</span>
-          </div>
         </div>
 
         {/* 2 Primary Action Cards */}
