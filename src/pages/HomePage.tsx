@@ -81,31 +81,53 @@ export const HomePage: React.FC = () => {
             </svg>
           </div>
           <div className="min-w-0">
-            <span className="text-[11px] text-slate-500 font-medium block leading-none">
-              {user?.name ? 'Welcome back,' : 'CampusFind'}
-            </span>
-            <h1 className="text-sm font-extrabold tracking-tight text-[#1E3A8A] truncate mt-0.5">
-              {user?.name ? `${user.name.split(' ')[0]} 👋` : 'College Lost & Found'}
-            </h1>
+            {user?.name ? (
+              <>
+                <span className="text-[11px] text-slate-500 font-medium block leading-none">
+                  Welcome back,
+                </span>
+                <h1 className="text-sm font-extrabold tracking-tight text-[#1E3A8A] truncate mt-0.5">
+                  {user.name.split(' ')[0]} 👋
+                </h1>
+              </>
+            ) : (
+              <>
+                <h1 className="text-sm font-extrabold tracking-tight text-[#1E3A8A] leading-none">
+                  CampusFind
+                </h1>
+                <span className="text-[10px] text-slate-500 font-medium">
+                  Official Lost & Found Network
+                </span>
+              </>
+            )}
           </div>
         </div>
 
-        <Link
-          to={user?.email ? "/profile" : "/login"}
-          className="flex items-center gap-1.5 p-1 rounded-full hover:bg-slate-100 transition-colors flex-shrink-0"
-        >
-          {user?.avatar ? (
-            <img
-              src={user.avatar}
-              alt={user.name || 'User'}
-              className="w-8 h-8 rounded-full object-cover ring-2 ring-blue-500/20"
-            />
-          ) : (
-            <div className="w-8 h-8 rounded-full bg-blue-100 text-[#1E3A8A] font-bold text-xs flex items-center justify-center">
-              {user?.name ? user.name[0].toUpperCase() : 'U'}
-            </div>
-          )}
-        </Link>
+        {user?.name ? (
+          <Link
+            to="/profile"
+            className="flex items-center gap-1.5 p-1 rounded-full hover:bg-slate-100 transition-colors flex-shrink-0"
+          >
+            {user.avatar ? (
+              <img
+                src={user.avatar}
+                alt={user.name}
+                className="w-8 h-8 rounded-full object-cover ring-2 ring-blue-500/20"
+              />
+            ) : (
+              <div className="w-8 h-8 rounded-full bg-blue-100 text-[#1E3A8A] font-bold text-xs flex items-center justify-center">
+                {user.name[0].toUpperCase()}
+              </div>
+            )}
+          </Link>
+        ) : (
+          <Link
+            to="/login"
+            className="px-3 py-1.5 rounded-xl bg-blue-50 text-[#1E3A8A] border border-blue-200 text-xs font-bold hover:bg-blue-100 transition-colors"
+          >
+            Sign In
+          </Link>
+        )}
       </div>
 
       {/* Hero Banner Section */}

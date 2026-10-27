@@ -15,13 +15,13 @@ export interface UserProfile {
 }
 
 const DEFAULT_GUEST_USER: UserProfile = {
-  name: 'Alex Morgan',
-  email: 'alex.m@college.edu',
-  studentId: 'IEC2023048',
-  department: 'Information Technology, 3rd Year',
+  name: '',
+  email: '',
+  studentId: '',
+  department: '',
   role: 'student',
-  avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
-  phone: '+1 (555) 234-8901'
+  avatar: '',
+  phone: ''
 };
 
 interface AppContextType {
@@ -50,8 +50,16 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<UserProfile>(() => {
+    const hasToken = localStorage.getItem('cf_auth_token');
     const saved = localStorage.getItem('cf_user');
-    return saved ? JSON.parse(saved) : DEFAULT_GUEST_USER;
+    if (hasToken && saved) {
+      try {
+        return JSON.parse(saved);
+      } catch {
+        return DEFAULT_GUEST_USER;
+      }
+    }
+    return DEFAULT_GUEST_USER;
   });
 
   const [items, setItems] = useState<CampusItem[]>(() => {

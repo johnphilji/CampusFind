@@ -38,6 +38,9 @@ export const ReportItemPage: React.FC = () => {
   const [location, setLocation] = useState(initialLocation);
   const [customLocation, setCustomLocation] = useState('');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [reportedTime, setReportedTime] = useState(
+    new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  );
   const [description, setDescription] = useState('');
   const [identifyingQuestion, setIdentifyingQuestion] = useState('');
   const [securityLevel, setSecurityLevel] = useState<SecurityLevel>('standard');
@@ -96,10 +99,11 @@ export const ReportItemPage: React.FC = () => {
         category,
         location: finalLocation,
         date,
+        reportedTime,
         description,
         imageUrl: imagePreview,
-        reporterName: user.name,
-        reporterDepartment: user.department,
+        reporterName: user.name || 'Anonymous Student',
+        reporterDepartment: user.department || 'Campus Department',
         identifyingQuestion: reportType === 'found' ? identifyingQuestion : undefined,
         securityLevel: reportType === 'found' ? securityLevel : undefined,
         custodyLocation: reportType === 'found' ? custodyLocation : undefined,
@@ -312,15 +316,28 @@ export const ReportItemPage: React.FC = () => {
               )}
             </div>
 
-            {/* Date */}
-            <div className="space-y-1.5">
-              <label className="block text-xs font-bold text-[#172033]">Date Lost or Found *</label>
-              <input
-                type="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                className="w-full p-3 rounded-xl border border-[#E7EAF1] text-xs sm:text-sm text-[#172033] focus:outline-none focus:ring-2 focus:ring-[#3559C7]/20"
-              />
+            {/* Date and Time Lost or Found */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <label className="block text-xs font-bold text-slate-800">Date Lost or Found *</label>
+                <input
+                  type="date"
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
+                  className="w-full p-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="block text-xs font-bold text-slate-800">Approximate Time *</label>
+                <input
+                  type="text"
+                  placeholder="e.g. 10:30 AM, Afternoon, After Lecture"
+                  value={reportedTime}
+                  onChange={(e) => setReportedTime(e.target.value)}
+                  className="w-full p-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                />
+              </div>
             </div>
 
             {/* Description */}

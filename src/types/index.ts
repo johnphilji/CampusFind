@@ -43,6 +43,7 @@ export interface CampusItem {
   custodyLocation?: CustodyLocation;
   securityLevel?: SecurityLevel;
   date: string;
+  reportedTime?: string;
   timeAgo: string;
   description: string;
   imageUrl: string;

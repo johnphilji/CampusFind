@@ -182,8 +182,10 @@ export const ItemDetailsPage: React.FC = () => {
                 <Calendar className="w-4 h-4" />
               </div>
               <div>
-                <span className="text-slate-500 block text-[10px] uppercase font-bold">Reported Date</span>
-                <span className="font-semibold">{item.date}</span>
+                <span className="text-slate-500 block text-[10px] uppercase font-bold">Reported Date & Time</span>
+                <span className="font-semibold">
+                  {item.date} {item.reportedTime ? `at ${item.reportedTime}` : ''}
+                </span>
               </div>
             </div>
           </div>
@@ -285,8 +287,8 @@ export const ItemDetailsPage: React.FC = () => {
 
       {/* CLAIM MODAL DIALOG */}
       {isClaimModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 card-shadow space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl max-w-md w-full p-5 sm:p-6 card-shadow space-y-4 max-h-[90vh] overflow-y-auto">
             {claimSuccess ? (
               <div className="text-center py-4 space-y-3">
                 <div className="w-14 h-14 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto">
