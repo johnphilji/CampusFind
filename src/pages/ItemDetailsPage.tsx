@@ -13,12 +13,15 @@ import {
   Sparkles,
   Lock,
   ChevronRight,
-  AlertTriangle
+  AlertTriangle,
+  Building2,
+  FileCheck
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
-import { StatusBadge, TypeBadge } from '../components/cards/Badges';
+import { StatusBadge, TypeBadge, SecurityBadge } from '../components/cards/Badges';
 import { ItemCard } from '../components/cards/ItemCard';
 import { ResponsiveImage } from '../components/cards/ResponsiveImage';
+import { VerificationMethod } from '../types';
 
 export const ItemDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -33,6 +36,7 @@ export const ItemDetailsPage: React.FC = () => {
   const [claimantEmail, setClaimantEmail] = useState(user.email);
   const [claimantId, setClaimantId] = useState(user.studentId);
   const [proofDetails, setProofDetails] = useState('');
+  const [verificationMethod, setVerificationMethod] = useState<VerificationMethod>('Unique Markings');
   const [isClaimSubmitting, setIsClaimSubmitting] = useState(false);
   const [claimSuccess, setClaimSuccess] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
@@ -112,12 +116,15 @@ export const ItemDetailsPage: React.FC = () => {
             aspectRatioClass="w-full h-full"
             className="w-full h-full object-cover"
           />
-          <div className="absolute top-4 left-4 flex gap-2 z-10">
+          <div className="absolute top-4 left-4 flex flex-wrap gap-2 z-10">
             <TypeBadge type={item.type} className="shadow-sm" />
             <StatusBadge status={item.status} className="shadow-sm" />
+            {item.securityLevel && (
+              <SecurityBadge level={item.securityLevel} className="shadow-sm" />
+            )}
           </div>
 
-          <div className="absolute bottom-4 right-4 bg-white/95 backdrop-blur-md px-3 py-1 rounded-xl text-xs font-mono font-bold text-[#243B8A] shadow-md border border-[#E7EAF1] z-10">
+          <div className="absolute bottom-4 right-4 bg-white/95 backdrop-blur-md px-3 py-1 rounded-xl text-xs font-mono font-bold text-blue-900 shadow-md border border-slate-200 z-10">
             {item.referenceNumber}
           </div>
         </div>
@@ -125,37 +132,57 @@ export const ItemDetailsPage: React.FC = () => {
         {/* Item Info Body */}
         <div className="p-5 sm:p-8 space-y-6">
           <div>
-            <div className="flex items-center gap-2 text-xs text-[#70798B] mb-1">
-              <span className="font-semibold text-[#3559C7]">{item.category}</span>
+            <div className="flex items-center gap-2 text-xs text-slate-500 mb-1">
+              <span className="font-semibold text-blue-700">{item.category}</span>
               <span>•</span>
               <span className="flex items-center gap-1">
                 <Clock className="w-3.5 h-3.5" /> {item.timeAgo}
               </span>
             </div>
 
-            <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-[#172033]">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-slate-900">
               {item.title}
             </h1>
           </div>
 
+          {/* SOP Custody & Verification Banner (If Found Item) */}
+          {item.custodyLocation && (
+            <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-900 text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm border border-slate-800">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-blue-600/30 text-blue-300 border border-blue-500/30 flex items-center justify-center flex-shrink-0">
+                  <Building2 className="w-5 h-5 text-sky-400" />
+                </div>
+                <div>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-sky-300">
+                    Official Physical Custody Location
+                  </span>
+                  <p className="text-xs sm:text-sm font-bold text-white">{item.custodyLocation}</p>
+                </div>
+              </div>
+              <div className="text-[11px] text-slate-300 bg-slate-800/80 px-3 py-1 rounded-xl border border-slate-700">
+                Retention Window: <strong className="text-white">{item.daysRetained ?? 0} days active</strong>
+              </div>
+            </div>
+          )}
+
           {/* Quick Details Chips */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 rounded-2xl bg-[#F6F7FB] border border-[#E7EAF1]">
-            <div className="flex items-center gap-2.5 text-xs text-[#172033]">
-              <div className="w-8 h-8 rounded-lg bg-white border border-[#E7EAF1] flex items-center justify-center text-[#3559C7]">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 rounded-2xl bg-slate-50 border border-slate-200">
+            <div className="flex items-center gap-2.5 text-xs text-slate-900">
+              <div className="w-8 h-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-blue-600">
                 <MapPin className="w-4 h-4" />
               </div>
               <div>
-                <span className="text-[#70798B] block text-[10px] uppercase font-bold">Campus Zone</span>
+                <span className="text-slate-500 block text-[10px] uppercase font-bold">Campus Zone Found</span>
                 <span className="font-semibold">{item.location}</span>
               </div>
             </div>
 
-            <div className="flex items-center gap-2.5 text-xs text-[#172033]">
-              <div className="w-8 h-8 rounded-lg bg-white border border-[#E7EAF1] flex items-center justify-center text-[#3559C7]">
+            <div className="flex items-center gap-2.5 text-xs text-slate-900">
+              <div className="w-8 h-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-blue-600">
                 <Calendar className="w-4 h-4" />
               </div>
               <div>
-                <span className="text-[#70798B] block text-[10px] uppercase font-bold">Reported Date</span>
+                <span className="text-slate-500 block text-[10px] uppercase font-bold">Reported Date</span>
                 <span className="font-semibold">{item.date}</span>
               </div>
             </div>
@@ -322,21 +349,42 @@ export const ItemDetailsPage: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className="block font-bold text-[#172033] mb-1">
-                      Proof of Ownership & Unique Details *
+                    <label className="block font-bold text-slate-800 mb-1">
+                      Verification Proof Type *
+                    </label>
+                    <select
+                      value={verificationMethod}
+                      onChange={(e) => setVerificationMethod(e.target.value as VerificationMethod)}
+                      className="w-full p-2.5 rounded-xl border border-slate-200 text-xs font-medium bg-white"
+                    >
+                      <option value="Unique Markings">Unique Markings / Stickers / Scratches</option>
+                      <option value="Device Passcode / Unlock">Passcode / Device Unlock Verification</option>
+                      <option value="Serial / IMEI Number">Serial Number / IMEI / ID Match</option>
+                      <option value="Photo ID Match">Photo ID / College ID Match</option>
+                      <option value="Purchase Receipt">Purchase Invoice / Bill / Store Receipt</option>
+                      <option value="Witness Attestation">Dean / Hostel Warden / Staff Attestation</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-slate-800 mb-1">
+                      Proof of Ownership & Specific Identifying Details *
                     </label>
                     <textarea
                       rows={3}
                       required
-                      placeholder="Describe hidden details: passcode hints, stickers, contents, or answer the challenge question..."
+                      placeholder="Specify exact details: wallpaper image, passcode digits to unlock in front of admin, contents inside, or invoice details..."
                       value={proofDetails}
                       onChange={(e) => setProofDetails(e.target.value)}
-                      className="w-full p-2.5 rounded-xl border border-[#E7EAF1] text-xs"
+                      className="w-full p-2.5 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-blue-500/20"
                     />
                   </div>
 
-                  <div className="p-2.5 rounded-xl bg-slate-50 border border-[#E7EAF1] text-[11px] text-[#70798B]">
-                    🔒 Only designated administrative staff can view your claim details. Handover will be physically signed at Central Admin block.
+                  <div className="p-2.5 rounded-xl bg-blue-50/70 border border-blue-200/60 text-[11px] text-blue-900 flex items-start gap-1.5">
+                    <FileCheck className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
+                    <span>
+                      Physical Handover Protocol: You must present your College ID card and demonstrate verification at the designated custody desk ({item.custodyLocation || 'Admin Reception'}).
+                    </span>
                   </div>
                 </div>
 
@@ -344,16 +392,16 @@ export const ItemDetailsPage: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setIsClaimModalOpen(false)}
-                    className="flex-1 py-2.5 rounded-xl border border-[#E7EAF1] text-xs font-semibold text-[#70798B]"
+                    className="flex-1 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-600 hover:bg-slate-50"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={isClaimSubmitting}
-                    className="flex-1 py-2.5 rounded-xl bg-[#243B8A] hover:bg-[#3559C7] text-white text-xs font-semibold disabled:opacity-50"
+                    className="flex-1 py-2.5 rounded-xl bg-[#1E3A8A] hover:bg-blue-800 text-white text-xs font-semibold disabled:opacity-50 shadow-sm"
                   >
-                    {isClaimSubmitting ? 'Submitting...' : 'Confirm Claim'}
+                    {isClaimSubmitting ? 'Verifying...' : 'Submit Claim'}
                   </button>
                 </div>
               </form>

@@ -13,10 +13,13 @@ import {
   ArrowLeft,
   X,
   Sparkles,
-  Info
+  Info,
+  Shield,
+  Building2,
+  Clock
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
-import { ItemCategory, ItemType } from '../types';
+import { ItemCategory, ItemType, SecurityLevel, CustodyLocation } from '../types';
 import { CAMPUS_CATEGORIES, CAMPUS_LOCATIONS } from '../data/mockData';
 
 export const ReportItemPage: React.FC = () => {
@@ -37,6 +40,8 @@ export const ReportItemPage: React.FC = () => {
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [description, setDescription] = useState('');
   const [identifyingQuestion, setIdentifyingQuestion] = useState('');
+  const [securityLevel, setSecurityLevel] = useState<SecurityLevel>('standard');
+  const [custodyLocation, setCustodyLocation] = useState<CustodyLocation>('Central Library Desk');
   const [imagePreview, setImagePreview] = useState<string>(
     'https://images.unsplash.com/photo-1598327105666-5b89351aff97?auto=format&fit=crop&w=600&q=80'
   );
@@ -97,7 +102,9 @@ export const ReportItemPage: React.FC = () => {
         imageUrl: imagePreview,
         reporterName: user.name,
         reporterDepartment: user.department,
-        identifyingQuestion: reportType === 'found' ? identifyingQuestion : undefined
+        identifyingQuestion: reportType === 'found' ? identifyingQuestion : undefined,
+        securityLevel: reportType === 'found' ? securityLevel : undefined,
+        custodyLocation: reportType === 'found' ? custodyLocation : undefined,
       });
 
       setCreatedRef(created.referenceNumber);
@@ -452,20 +459,94 @@ export const ReportItemPage: React.FC = () => {
             </div>
 
             {reportType === 'found' ? (
-              <div className="space-y-2 p-4 bg-[#E8EEFF]/40 rounded-2xl border border-[#3559C7]/20">
-                <label className="block text-xs font-bold text-[#243B8A]">
-                  Ownership Challenge Question (Optional)
-                </label>
-                <p className="text-[11px] text-[#70798B]">
-                  Ask something only the true owner would know, e.g. "What wallpaper is on the lockscreen?" or "What keychain is attached?"
-                </p>
-                <input
-                  type="text"
-                  placeholder="e.g. Color of phone case or initials on keychain"
-                  value={identifyingQuestion}
-                  onChange={(e) => setIdentifyingQuestion(e.target.value)}
-                  className="w-full p-2.5 rounded-xl border border-[#E7EAF1] bg-white text-xs sm:text-sm text-[#172033] focus:outline-none"
-                />
+              <div className="space-y-4">
+                {/* Institutional Security & Value Classification */}
+                <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200/80 space-y-2">
+                  <label className="block text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                    <Shield className="w-4 h-4 text-blue-600" />
+                    <span>Item Value & SOP Retention Classification</span>
+                  </label>
+                  <p className="text-[11px] text-slate-500">
+                    Determines physical lockup protocol and holding duration per campus regulations.
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => setSecurityLevel('standard')}
+                      className={`p-2.5 rounded-xl border text-left transition-all ${
+                        securityLevel === 'standard'
+                          ? 'border-blue-600 bg-blue-50/70 text-blue-900 ring-1 ring-blue-500'
+                          : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
+                      }`}
+                    >
+                      <div className="font-bold text-xs">Standard Item</div>
+                      <div className="text-[10px] text-slate-500">Books, keys, apparel (30d)</div>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSecurityLevel('valuable_secure')}
+                      className={`p-2.5 rounded-xl border text-left transition-all ${
+                        securityLevel === 'valuable_secure'
+                          ? 'border-indigo-600 bg-indigo-50 text-indigo-900 ring-1 ring-indigo-500'
+                          : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
+                      }`}
+                    >
+                      <div className="font-bold text-xs text-indigo-700">🔒 High-Value Safe</div>
+                      <div className="text-[10px] text-slate-500">Phones, laptops, cash (90d)</div>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSecurityLevel('perishable')}
+                      className={`p-2.5 rounded-xl border text-left transition-all ${
+                        securityLevel === 'perishable'
+                          ? 'border-amber-600 bg-amber-50 text-amber-900 ring-1 ring-amber-500'
+                          : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
+                      }`}
+                    >
+                      <div className="font-bold text-xs text-amber-700">⚠️ Perishable</div>
+                      <div className="text-[10px] text-slate-500">Food/drinks (48h hygiene)</div>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Physical Custody Desk */}
+                <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200/80 space-y-2">
+                  <label className="block text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                    <Building2 className="w-4 h-4 text-blue-600" />
+                    <span>Physical Custody Drop-Off Desk</span>
+                  </label>
+                  <p className="text-[11px] text-slate-500">
+                    Where the physical item has been deposited or handed over for storage.
+                  </p>
+                  <select
+                    value={custodyLocation}
+                    onChange={(e) => setCustodyLocation(e.target.value as CustodyLocation)}
+                    className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs sm:text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                  >
+                    <option value="Central Library Desk">Central Library Desk (Ground Floor)</option>
+                    <option value="Campus Security HQ (Central Safe)">Campus Security HQ (Central Safe)</option>
+                    <option value="Student Center Information Counter">Student Center Information Counter</option>
+                    <option value="Hostel Warden Office">Hostel Warden Office</option>
+                    <option value="Sports Complex Reception">Sports Complex Reception</option>
+                    <option value="Departmental Front Desk">Departmental Front Desk</option>
+                  </select>
+                </div>
+
+                <div className="space-y-2 p-4 bg-blue-50/50 rounded-2xl border border-blue-200/60">
+                  <label className="block text-xs font-bold text-blue-900">
+                    Ownership Challenge Question (Fraud Prevention)
+                  </label>
+                  <p className="text-[11px] text-slate-500">
+                    Ask something only the true owner can describe (e.g. "What sticker is on the laptop lid?" or "Describe lockscreen wallpaper").
+                  </p>
+                  <input
+                    type="text"
+                    placeholder="e.g. Color of phone case or initials on keychain"
+                    value={identifyingQuestion}
+                    onChange={(e) => setIdentifyingQuestion(e.target.value)}
+                    className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs sm:text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                  />
+                </div>
               </div>
             ) : null}
 

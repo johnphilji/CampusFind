@@ -98,13 +98,13 @@ export const ExplorePage: React.FC = () => {
         </div>
 
         {/* Lost / Found Segmented Control */}
-        <div className="inline-flex p-1 bg-[#E7EAF1]/70 rounded-2xl w-full sm:w-auto">
+        <div className="inline-flex p-1 bg-slate-200/80 rounded-2xl w-full sm:w-auto">
           <button
             onClick={() => setSelectedType('all')}
             className={`flex-1 sm:flex-initial px-4 py-1.5 text-xs font-bold rounded-xl transition-all ${
               selectedType === 'all'
-                ? 'bg-white text-[#243B8A] shadow-xs'
-                : 'text-[#70798B] hover:text-[#172033]'
+                ? 'bg-white text-blue-900 shadow-xs'
+                : 'text-slate-600 hover:text-slate-900'
             }`}
           >
             All Items ({items.length})
@@ -113,8 +113,8 @@ export const ExplorePage: React.FC = () => {
             onClick={() => setSelectedType('lost')}
             className={`flex-1 sm:flex-initial px-4 py-1.5 text-xs font-bold rounded-xl transition-all ${
               selectedType === 'lost'
-                ? 'bg-rose-50 text-[#D64545] shadow-xs border border-rose-200'
-                : 'text-[#70798B] hover:text-[#172033]'
+                ? 'bg-rose-50 text-rose-700 shadow-xs border border-rose-200'
+                : 'text-slate-600 hover:text-slate-900'
             }`}
           >
             Lost ({items.filter(i => i.type === 'lost').length})
@@ -123,8 +123,8 @@ export const ExplorePage: React.FC = () => {
             onClick={() => setSelectedType('found')}
             className={`flex-1 sm:flex-initial px-4 py-1.5 text-xs font-bold rounded-xl transition-all ${
               selectedType === 'found'
-                ? 'bg-[#E8EEFF] text-[#243B8A] shadow-xs border border-[#3559C7]/30'
-                : 'text-[#70798B] hover:text-[#172033]'
+                ? 'bg-blue-50 text-blue-900 shadow-xs border border-blue-200'
+                : 'text-slate-600 hover:text-slate-900'
             }`}
           >
             Found ({items.filter(i => i.type === 'found').length})
@@ -135,13 +135,13 @@ export const ExplorePage: React.FC = () => {
       {/* Search Input Bar + Filter Triggers */}
       <div className="flex items-center gap-2 sm:gap-3">
         <div className="relative flex-1">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#70798B]" />
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input
             type="text"
-            placeholder="Search by keyword, item name, or reference..."
+            placeholder="Search by keyword, brand, location, or CF reference..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-9 py-2.5 rounded-xl bg-white border border-[#E7EAF1] text-sm text-[#172033] placeholder:text-[#70798B] focus:outline-none focus:ring-2 focus:ring-[#3559C7]/30"
+            className="w-full pl-10 pr-9 py-2.5 rounded-xl bg-white border border-slate-200 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
           />
           {search && (
             <button

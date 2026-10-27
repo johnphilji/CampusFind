@@ -4,15 +4,35 @@ export type ItemCategory =
   | 'Electronics'
   | 'ID Cards'
   | 'Keys'
-  | 'Bags'
-  | 'Books'
-  | 'Earphones'
-  | 'Bottles'
-  | 'Clothing'
-  | 'Accessories'
+  | 'Wallets & Money'
+  | 'Bags & Backpacks'
+  | 'Books & Notes'
+  | 'Headphones & Audio'
+  | 'Water Bottles'
+  | 'Apparel & Clothing'
+  | 'Eyewear & Accessories'
+  | 'Medical & Personal Care'
   | 'Other';
 
-export type ItemStatus = 'open' | 'claimed' | 'under_review' | 'resolved';
+export type SecurityLevel = 'standard' | 'valuable_secure' | 'hazardous_restricted' | 'perishable';
+
+export type VerificationMethod =
+  | 'Serial / IMEI Number'
+  | 'Photo ID Match'
+  | 'Device Passcode / Unlock'
+  | 'Unique Markings'
+  | 'Purchase Receipt'
+  | 'Witness Attestation';
+
+export type CustodyLocation = 
+  | 'Campus Security HQ (Central Safe)'
+  | 'Central Library Desk'
+  | 'Student Center Information Counter'
+  | 'Sports Complex Reception'
+  | 'Departmental Front Desk'
+  | 'Hostel Warden Office';
+
+export type ItemStatus = 'open' | 'claimed' | 'under_review' | 'resolved' | 'disposed' | 'police_custody';
 
 export interface CampusItem {
   id: string;
@@ -20,6 +40,8 @@ export interface CampusItem {
   type: ItemType;
   category: ItemCategory;
   location: string;
+  custodyLocation?: CustodyLocation;
+  securityLevel?: SecurityLevel;
   date: string;
   timeAgo: string;
   description: string;
@@ -30,6 +52,9 @@ export interface CampusItem {
   referenceNumber: string;
   identifyingQuestion?: string;
   possibleMatchCount?: number;
+  retentionExpiresAt?: string;
+  daysRetained?: number;
+  isHighValue?: boolean;
 }
 
 export interface MatchSuggestion {
@@ -66,4 +91,5 @@ export interface ClaimRecord {
   itemType: ItemType;
   itemLocation: string;
   adminNotes?: string;
+  verificationMethod?: 'Serial / IMEI Number' | 'Photo ID Match' | 'Device Passcode / Unlock' | 'Unique Markings';
 }

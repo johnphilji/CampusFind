@@ -19,7 +19,10 @@ import {
   Glasses,
   Clock,
   Compass,
-  Info
+  Info,
+  Lock,
+  Building2,
+  AlertTriangle
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { ItemCard } from '../components/cards/ItemCard';
@@ -42,16 +45,16 @@ export const HomePage: React.FC = () => {
 
   const getCategoryIcon = (name: string) => {
     switch (name) {
-      case 'Electronics': return <Smartphone className="w-5 h-5 text-[#3559C7]" />;
-      case 'ID Cards': return <CreditCard className="w-5 h-5 text-[#3559C7]" />;
-      case 'Keys': return <Key className="w-5 h-5 text-[#3559C7]" />;
-      case 'Bags': return <Briefcase className="w-5 h-5 text-[#3559C7]" />;
-      case 'Books': return <BookOpen className="w-5 h-5 text-[#3559C7]" />;
-      case 'Earphones': return <Headphones className="w-5 h-5 text-[#3559C7]" />;
-      case 'Bottles': return <Milk className="w-5 h-5 text-[#3559C7]" />;
-      case 'Clothing': return <Shirt className="w-5 h-5 text-[#3559C7]" />;
-      case 'Accessories': return <Glasses className="w-5 h-5 text-[#3559C7]" />;
-      default: return <HelpCircle className="w-5 h-5 text-[#3559C7]" />;
+      case 'Electronics': return <Smartphone className="w-5 h-5 text-blue-600" />;
+      case 'ID Cards': return <CreditCard className="w-5 h-5 text-blue-600" />;
+      case 'Keys': return <Key className="w-5 h-5 text-blue-600" />;
+      case 'Bags': return <Briefcase className="w-5 h-5 text-blue-600" />;
+      case 'Books': return <BookOpen className="w-5 h-5 text-blue-600" />;
+      case 'Earphones': return <Headphones className="w-5 h-5 text-blue-600" />;
+      case 'Bottles': return <Milk className="w-5 h-5 text-blue-600" />;
+      case 'Clothing': return <Shirt className="w-5 h-5 text-blue-600" />;
+      case 'Accessories': return <Glasses className="w-5 h-5 text-blue-600" />;
+      default: return <HelpCircle className="w-5 h-5 text-blue-600" />;
     }
   };
 
@@ -59,7 +62,6 @@ export const HomePage: React.FC = () => {
     .filter(item => activeTab === 'all' || item.type === activeTab)
     .slice(0, 6);
 
-  // Prototype stats clearly marked as sample demo data
   const stats = {
     totalReports: items.length + 142,
     returnedItems: items.filter(i => i.status === 'resolved').length + 118,
@@ -68,18 +70,18 @@ export const HomePage: React.FC = () => {
   };
 
   return (
-    <div className="pb-24 md:pb-16 space-y-5 sm:space-y-6 md:space-y-8 max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 pt-3 sm:pt-4">
-      {/* Mobile Top Welcome & QR Bar */}
-      <div className="md:hidden flex items-center justify-between py-1 bg-white rounded-2xl p-3 border border-[#E7EAF1] shadow-xs">
+    <div className="pb-24 md:pb-16 space-y-4 sm:space-y-6 md:space-y-8 max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 pt-3 sm:pt-4">
+      {/* Mobile Top Welcome & Live QR Desk */}
+      <div className="md:hidden flex items-center justify-between py-1 bg-white rounded-2xl p-3 border border-slate-200/80 shadow-xs">
         <div className="flex items-center gap-2.5 min-w-0">
           <img
             src={user.avatar}
             alt={user.name}
-            className="w-9 h-9 rounded-full object-cover ring-2 ring-[#3559C7]/20 flex-shrink-0"
+            className="w-9 h-9 rounded-full object-cover ring-2 ring-blue-500/20 flex-shrink-0"
           />
           <div className="min-w-0">
-            <span className="text-[11px] text-[#70798B] font-medium block leading-none">Welcome back,</span>
-            <h2 className="text-sm font-bold text-[#172033] tracking-tight truncate mt-0.5">
+            <span className="text-[11px] text-slate-500 font-medium block leading-none">Welcome back,</span>
+            <h2 className="text-sm font-bold text-slate-900 tracking-tight truncate mt-0.5">
               {user.name.split(' ')[0]} 👋
             </h2>
           </div>
@@ -87,31 +89,50 @@ export const HomePage: React.FC = () => {
 
         <Link
           to="/report?type=found&location=Central+Library"
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#E8EEFF] text-[#243B8A] text-xs font-semibold flex-shrink-0 active:scale-95 transition-transform"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-50 text-blue-800 text-xs font-semibold flex-shrink-0 active:scale-95 transition-transform"
         >
-          <QrCode className="w-3.5 h-3.5 text-[#3559C7]" />
+          <QrCode className="w-3.5 h-3.5 text-blue-600" />
           <span>Library QR</span>
         </Link>
       </div>
 
+      {/* Institutional SOP Status Notice Banner */}
+      <div className="bg-slate-900 text-slate-100 rounded-2xl px-4 py-2.5 sm:py-3 flex flex-wrap items-center justify-between gap-2 shadow-sm border border-slate-800 text-xs">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 font-semibold text-[11px] border border-blue-400/30">
+            <Lock className="w-3 h-3 text-blue-400" /> Real-World SOP Protocol Active
+          </span>
+          <span className="text-slate-300 text-[11px] sm:text-xs">
+            High-value items routed to Security Dual-Custody Safe • 48hr hygiene rule for perishables.
+          </span>
+        </div>
+        <Link
+          to="/explore"
+          className="text-sky-300 hover:text-white font-semibold text-[11px] flex items-center gap-1 ml-auto sm:ml-0"
+        >
+          <span>Custody Locations</span>
+          <ArrowRight className="w-3 h-3" />
+        </Link>
+      </div>
+
       {/* Hero Banner Section */}
-      <div className="relative rounded-3xl overflow-hidden bg-gradient-to-br from-[#1C2C6A] via-[#243B8A] to-[#3559C7] text-white p-4 sm:p-7 md:p-10 shadow-xl shadow-[#243B8A]/15">
-        {/* Subtle Decorative Campus Blueprint Grid */}
+      <div className="relative rounded-3xl overflow-hidden bg-gradient-to-br from-[#0F172A] via-[#1E3A8A] to-[#0284C7] text-white p-4 sm:p-7 md:p-10 shadow-xl shadow-blue-900/15">
+        {/* Subtle Decorative Grid */}
         <div className="absolute inset-0 opacity-10 pointer-events-none bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:16px_16px]" />
 
         <div className="relative z-10 max-w-2xl space-y-2.5 sm:space-y-4">
           <div className="inline-flex items-center gap-1.5 sm:gap-2 px-2.5 py-1 rounded-full bg-white/15 backdrop-blur-md text-[11px] sm:text-xs font-semibold tracking-wide text-white/90 border border-white/20">
-            <span className="w-2 h-2 rounded-full bg-[#0F9D91] animate-ping" />
-            Official College Lost & Found System
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+            Official Campus Lost & Found System
           </div>
 
           <h1 className="text-xl sm:text-3xl md:text-5xl font-extrabold tracking-tight leading-tight">
-            Lost something? <br className="hidden sm:inline" />
-            <span className="text-[#98B5FF]">Let's find it.</span>
+            Lost something on campus? <br className="hidden sm:inline" />
+            <span className="text-sky-200">Let's track & recover it.</span>
           </h1>
 
           <p className="text-xs sm:text-sm md:text-base text-white/85 max-w-lg leading-relaxed">
-            Your campus community unites to return misplaced belongings safely with verified handovers.
+            Your university network connects students, staff, and campus security for verified, secure item custody.
           </p>
 
           {/* Search Input Bar */}
