@@ -85,12 +85,19 @@ export interface ClaimRecord {
   claimantName: string;
   claimantEmail: string;
   claimantId: string;
+  claimantPhone?: string;
   proofDetails: string;
   status: 'Submitted' | 'Under Review' | 'More Information Required' | 'Approved' | 'Rejected' | 'Item Returned';
   submittedAt: string;
   itemTitle: string;
   itemType: ItemType;
   itemLocation: string;
+  itemCategory?: ItemCategory;
+  itemImageUrl?: string;
+  itemReferenceNumber?: string;
+  itemDescription?: string;
+  reportStatus?: ItemStatus;
   adminNotes?: string;
   verificationMethod?: 'Serial / IMEI Number' | 'Photo ID Match' | 'Device Passcode / Unlock' | 'Unique Markings';
 }
+

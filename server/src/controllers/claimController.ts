@@ -177,11 +177,16 @@ export async function getClaims(req: RequestWithUser, res: Response): Promise<vo
         r.title as item_title,
         r.location as item_location,
         r.type as item_type,
+        r.category as item_category,
+        r.image_url as item_image_url,
+        r.reference_number as item_reference_number,
+        r.description as item_description,
         r.status as report_status,
         r.reporter_id,
         u.full_name as claimant_name,
         u.email as claimant_email,
-        u.student_id as claimant_student_id
+        u.student_id as claimant_student_id,
+        u.phone_number as claimant_phone
       FROM claims c
       JOIN reports r ON c.report_id = r.id
       JOIN users u ON c.claimant_id = u.id
