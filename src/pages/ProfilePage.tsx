@@ -18,7 +18,7 @@ import {
 import { useApp } from '../context/AppContext';
 
 export const ProfilePage: React.FC = () => {
-  const { user, activeRole, toggleRole, logout, isAuthenticated } = useApp();
+  const { user, logout, isAuthenticated } = useApp();
   const navigate = useNavigate();
 
   // Settings states
@@ -68,7 +68,7 @@ export const ProfilePage: React.FC = () => {
             </span>
             <span className="flex items-center gap-1.5">
               <ShieldCheck className="w-3.5 h-3.5 text-[#0F9D91]" />
-              <span>Verified Student Account</span>
+              <span>{user.role === 'admin' ? 'Campus Safety & Admin Officer' : 'Verified Student Account'}</span>
             </span>
           </div>
         </div>
@@ -80,25 +80,6 @@ export const ProfilePage: React.FC = () => {
           <span>Preference setting updated!</span>
         </div>
       )}
-
-      {/* Role Switcher Demo Box */}
-      <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-2xl border border-amber-200 p-4 card-shadow flex items-center justify-between gap-4">
-        <div>
-          <span className="text-[10px] uppercase font-bold text-amber-800 tracking-wider">
-            Prototype Evaluation Control
-          </span>
-          <h4 className="text-sm font-bold text-[#172033] mt-0.5">Switch Application Perspective</h4>
-          <p className="text-xs text-[#70798B]">
-            Currently previewing as: <strong>{activeRole === 'admin' ? 'College Admin Desk' : 'Student (Alex)'}</strong>
-          </p>
-        </div>
-        <button
-          onClick={toggleRole}
-          className="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-semibold text-xs shadow-xs transition-colors flex-shrink-0"
-        >
-          Switch to {activeRole === 'student' ? 'Admin' : 'Student'}
-        </button>
-      </div>
 
       {/* Settings Sections (Inspired by Ref 2) */}
       <div className="space-y-4">

@@ -182,10 +182,10 @@ export const AdminDashboardPage: React.FC = () => {
 
             <div className="flex items-center gap-2 pl-3 border-l border-slate-200">
               <div className="w-8 h-8 rounded-full bg-blue-100 text-[#1E73E8] font-bold text-xs flex items-center justify-center border border-blue-200">
-                {user.name ? user.name.charAt(0).toUpperCase() : 'A'}
+                A
               </div>
               <div className="hidden md:block text-left">
-                <p className="text-xs font-bold text-slate-800 leading-tight">{user.name || 'Admin Officer'}</p>
+                <p className="text-xs font-bold text-slate-800 leading-tight">Admin</p>
                 <span className="text-[10px] text-emerald-600 font-medium flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Security Staff
                 </span>

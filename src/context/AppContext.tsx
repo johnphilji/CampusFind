@@ -35,7 +35,6 @@ interface AppContextType {
   login: (credentials: { email: string; password: string }) => Promise<void>;
   register: (data: { fullName: string; email: string; password: string; studentId: string; department?: string; phone?: string }) => Promise<void>;
   logout: () => void;
-  toggleRole: () => void;
   addItem: (item: Omit<CampusItem, 'id' | 'referenceNumber' | 'status' | 'timeAgo'>) => Promise<CampusItem>;
   updateItemStatus: (id: string, status: CampusItem['status']) => void;
   submitClaim: (itemId: string, details: { name: string; email: string; studentId: string; proof: string }) => Promise<ClaimRecord>;
@@ -210,18 +209,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     localStorage.removeItem('cf_auth_token');
     setUser(DEFAULT_GUEST_USER);
     setActiveRole('student');
-  };
-
-  const toggleRole = () => {
-    setActiveRole(prev => {
-      const next = prev === 'student' ? 'admin' : 'student';
-      setUser(current => ({
-        ...current,
-        role: next,
-        name: next === 'admin' ? 'Dr. Sarah Connor (Admin Desk)' : 'Alex Morgan'
-      }));
-      return next;
-    });
   };
 
   const addItem = async (newItemData: Omit<CampusItem, 'id' | 'referenceNumber' | 'status' | 'timeAgo'>): Promise<CampusItem> => {
@@ -410,7 +397,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         login,
         register,
         logout,
-        toggleRole,
         addItem,
         updateItemStatus,
         submitClaim,

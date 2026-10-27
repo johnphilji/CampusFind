@@ -101,7 +101,7 @@ export const BottomNav: React.FC = () => {
 };
 
 export const DesktopHeader: React.FC = () => {
-  const { user, activeRole, toggleRole, unreadCount, isAuthenticated, logout } = useApp();
+  const { user, unreadCount, isAuthenticated, logout } = useApp();
   const navigate = useNavigate();
 
   const handleLogoutClick = () => {
@@ -164,40 +164,11 @@ export const DesktopHeader: React.FC = () => {
             >
               My Claims & Items
             </NavLink>
-            {(user.role === 'admin' || user.role === 'security_staff' || activeRole === 'admin') && (
-              <NavLink
-                to="/admin"
-                className={({ isActive }) =>
-                  `flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
-                    isActive ? 'bg-amber-50 text-amber-900 border border-amber-200/60' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-                  }`
-                }
-              >
-                <ShieldCheck className="w-3.5 h-3.5 text-amber-600" />
-                <span>Security Desk</span>
-              </NavLink>
-            )}
           </nav>
         </div>
 
         {/* Right Action Items */}
         <div className="flex items-center gap-2.5">
-          {/* Quick Role Switcher Pill - only visible if staff or admin */}
-          {isAuthenticated && (user.role === 'admin' || user.role === 'security_staff') && (
-            <button
-              onClick={toggleRole}
-              className={`hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold border transition-all ${
-                activeRole === 'admin'
-                  ? 'bg-amber-50 border-amber-200 text-amber-800'
-                  : 'bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-200'
-              }`}
-              title="Toggle role perspective"
-            >
-              <span className={`w-2 h-2 rounded-full ${activeRole === 'admin' ? 'bg-amber-600' : 'bg-emerald-500'}`} />
-              <span>{activeRole === 'admin' ? 'Campus Admin' : 'Staff Mode'}</span>
-            </button>
-          )}
-
           <NavLink
             to="/report"
             className="hidden sm:inline-flex items-center gap-1.5 bg-[#1E3A8A] hover:bg-[#172554] text-white px-3.5 py-2 rounded-xl text-xs font-semibold transition-all shadow-sm active:scale-95 cursor-pointer"
