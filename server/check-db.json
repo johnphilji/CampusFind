@@ -1,0 +1,7 @@
+{
+  "commands": [
+    "cd /opt/campusfind/server",
+    "node -e \"const { pool } = require('./dist/db/index.js'); pool.query('SELECT NOW()').then(r => require('fs').writeFileSync('/tmp/db_check.txt', 'SUCCESS ' + JSON.stringify(r.rows))).catch(e => require('fs').writeFileSync('/tmp/db_check.txt', 'ERR: ' + e.message + ' CODE: ' + e.code))\"",
+    "cat /tmp/db_check.txt"
+  ]
+}

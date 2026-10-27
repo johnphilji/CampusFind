@@ -1,0 +1,11 @@
+{
+  "commands": [
+    "cd /opt/campusfind",
+    "aws s3 cp s3://campusfind-uploads-880690594539/deploy/campusfind-deploy.tar.gz . --region ap-south-1",
+    "tar -xzf campusfind-deploy.tar.gz",
+    "cd server",
+    "npx tsx src/db/setup.ts",
+    "npx tsx src/db/seed.ts",
+    "pm2 restart campusfind-api"
+  ]
+}

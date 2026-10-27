@@ -1,0 +1,5 @@
+{
+  "commands": [
+    "pm2 logs campusfind-api --lines 30 --nostream"
+  ]
+}

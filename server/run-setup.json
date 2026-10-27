@@ -1,0 +1,8 @@
+{
+  "commands": [
+    "cd /opt/campusfind/server",
+    "npx tsx src/db/setup.ts",
+    "npx tsx src/db/seed.ts",
+    "pm2 restart campusfind-api"
+  ]
+}
