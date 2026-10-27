@@ -92,6 +92,22 @@ class ApiClient {
     });
   }
 
+  // --- Admin endpoints ---
+  public getAdminStats() {
+    return this.request<{ stats: any; recentReports: any[]; auditLog: any[] }>('/admin/stats');
+  }
+
+  public getAdminUsers() {
+    return this.request<{ users: any[] }>('/admin/users');
+  }
+
+  public adminUpdateReportStatus(reportId: string, status: string, adminNotes?: string) {
+    return this.request<{ message: string; report: any }>(`/admin/reports/${reportId}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status, adminNotes }),
+    });
+  }
+
   // --- S3 Presign endpoint ---
   public getPresignedUpload(filename: string, contentType: string, isPrivateEvidence: boolean = false) {
     return this.request<{ uploadUrl: string; publicUrl: string; key: string }>('/upload/presign', {

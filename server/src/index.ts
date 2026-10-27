@@ -7,6 +7,7 @@ import { requestLogger, errorHandler } from './middleware/logger.js';
 import { authRouter } from './routes/authRoutes.js';
 import { reportRouter } from './routes/reportRoutes.js';
 import { claimRouter } from './routes/claimRoutes.js';
+import { adminRouter } from './routes/adminRoutes.js';
 import { generatePresignedUploadUrl } from './services/storageService.js';
 import { authenticateToken } from './middleware/auth.js';
 import { startSQSWorker } from './services/sqsWorker.js';
@@ -57,6 +58,7 @@ app.post('/api/upload/presign', authenticateToken, async (req, res) => {
 app.use('/api/auth', authRouter);
 app.use('/api/reports', reportRouter);
 app.use('/api/claims', claimRouter);
+app.use('/api/admin', adminRouter);
 
 // Serve built frontend assets if hosted together on EC2
 const clientDistPath = path.resolve(__dirname, '../../dist');
