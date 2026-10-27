@@ -63,10 +63,10 @@ export const HomePage: React.FC = () => {
     .slice(0, 6);
 
   const stats = {
-    totalReports: items.length + 142,
-    returnedItems: items.filter(i => i.status === 'resolved').length + 118,
+    totalReports: items.length,
+    returnedItems: items.filter(i => i.status === 'resolved').length,
     activeMatches: matches.length,
-    successRate: '94%'
+    successRate: items.length > 0 ? `${Math.round((items.filter(i => i.status === 'resolved').length / items.length) * 100)}%` : '100%'
   };
 
   return (
@@ -371,32 +371,31 @@ export const HomePage: React.FC = () => {
           </div>
         </div>
 
-        {/* Security & Sample Notice */}
-        <div className="pt-3 sm:pt-4 border-t border-[#E7EAF1] flex flex-col sm:flex-row items-center justify-between gap-2.5 text-xs text-[#70798B]">
+        {/* Security Notice */}
+        <div className="pt-3 sm:pt-4 border-t border-slate-200/80 flex flex-col sm:flex-row items-center justify-between gap-2.5 text-xs text-slate-500">
           <div className="flex items-center gap-2 text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-200/60 w-full sm:w-auto">
             <ShieldCheck className="w-4 h-4 text-emerald-600 flex-shrink-0" />
             <span className="text-[11px] sm:text-xs">Strict privacy: Personal student IDs and contacts remain confidential.</span>
           </div>
-          <span className="text-[10px] sm:text-[11px] text-[#70798B] italic self-start sm:self-auto flex items-center gap-1">
-            <Info className="w-3 h-3 text-[#70798B]" /> Prototype Demonstration Records
+          <span className="text-[10px] sm:text-[11px] text-slate-500 self-start sm:self-auto flex items-center gap-1 font-medium">
+            <Lock className="w-3 h-3 text-blue-600" /> Verified Custody Protocol
           </span>
         </div>
       </section>
 
-      {/* College Community Stats — Clearly Labeled Demo Metrics */}
+      {/* College Community Stats */}
       <section className="space-y-2">
-        <div className="flex items-center justify-between text-xs text-[#70798B] px-1">
+        <div className="flex items-center justify-between text-xs text-slate-500 px-1">
           <span className="font-semibold uppercase tracking-wider text-[10px]">Campus Community Metrics</span>
-          <span className="italic text-[10px]">* Sample demonstration data</span>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-4">
-          <div className="bg-white p-3.5 sm:p-4 rounded-2xl border border-[#E7EAF1] text-center card-shadow">
-            <p className="text-xl sm:text-2xl md:text-3xl font-extrabold text-[#243B8A]">{stats.totalReports}</p>
-            <p className="text-[11px] sm:text-xs font-medium text-[#70798B] mt-1">Total Reported</p>
+          <div className="bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200/80 text-center card-shadow">
+            <p className="text-xl sm:text-2xl md:text-3xl font-extrabold text-[#1E3A8A]">{stats.totalReports}</p>
+            <p className="text-[11px] sm:text-xs font-medium text-slate-500 mt-1">Total Reported</p>
           </div>
-          <div className="bg-white p-3.5 sm:p-4 rounded-2xl border border-[#E7EAF1] text-center card-shadow">
-            <p className="text-xl sm:text-2xl md:text-3xl font-extrabold text-[#0F9D91]">{stats.returnedItems}</p>
-            <p className="text-[11px] sm:text-xs font-medium text-[#70798B] mt-1">Items Returned</p>
+          <div className="bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200/80 text-center card-shadow">
+            <p className="text-xl sm:text-2xl md:text-3xl font-extrabold text-teal-600">{stats.returnedItems}</p>
+            <p className="text-[11px] sm:text-xs font-medium text-slate-500 mt-1">Items Returned</p>
           </div>
           <div className="bg-white p-3.5 sm:p-4 rounded-2xl border border-[#E7EAF1] text-center card-shadow">
             <p className="text-xl sm:text-2xl md:text-3xl font-extrabold text-amber-600">{stats.activeMatches}</p>

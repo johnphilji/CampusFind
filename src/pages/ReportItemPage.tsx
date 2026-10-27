@@ -42,9 +42,7 @@ export const ReportItemPage: React.FC = () => {
   const [identifyingQuestion, setIdentifyingQuestion] = useState('');
   const [securityLevel, setSecurityLevel] = useState<SecurityLevel>('standard');
   const [custodyLocation, setCustodyLocation] = useState<CustodyLocation>('Central Library Desk');
-  const [imagePreview, setImagePreview] = useState<string>(
-    'https://images.unsplash.com/photo-1598327105666-5b89351aff97?auto=format&fit=crop&w=600&q=80'
-  );
+  const [imagePreview, setImagePreview] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [createdRef, setCreatedRef] = useState<string | null>(null);
   const [createdId, setCreatedId] = useState<string | null>(null);
@@ -348,29 +346,30 @@ export const ReportItemPage: React.FC = () => {
 
         {/* STEP 2: PHOTO ATTACHMENT */}
         {currentStep === 2 && (
-          <div className="space-y-5 animate-in fade-in duration-150">
+          <div className="space-y-4 animate-in fade-in duration-150">
             <div>
-              <h2 className="text-lg font-bold text-[#172033]">Photograph of Item</h2>
-              <p className="text-xs text-[#70798B]">
-                Upload or capture a photo. Photos dramatically increase recovery speed.
+              <h2 className="text-base sm:text-lg font-bold text-slate-900">Photograph of Item</h2>
+              <p className="text-xs text-slate-500">
+                Capture live with your mobile camera or upload from your gallery.
               </p>
             </div>
 
-            {/* Image Preview Box */}
-            <div className="relative rounded-2xl overflow-hidden border-2 border-dashed border-[#3559C7]/40 bg-[#F6F7FB] p-4 text-center">
+            {/* Image Preview / Capture Box */}
+            <div className="relative rounded-2xl overflow-hidden border-2 border-dashed border-blue-400/40 bg-slate-50 p-4 text-center">
               {imagePreview ? (
                 <div className="space-y-3">
                   <div className="max-h-64 rounded-xl overflow-hidden bg-black/5 flex items-center justify-center">
                     <img
                       src={imagePreview}
-                      alt="Upload preview"
+                      alt="Captured item"
                       className="max-h-60 object-contain mx-auto rounded-lg"
                     />
                   </div>
-                  <div className="flex items-center justify-center gap-3">
-                    <label className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-[#E7EAF1] text-xs font-semibold text-[#172033] hover:bg-slate-50 shadow-xs">
-                      <Camera className="w-3.5 h-3.5 text-[#3559C7]" />
-                      <span>Choose Another</span>
+                  <div className="flex items-center justify-center gap-2.5">
+                    {/* Live Camera Button */}
+                    <label className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-blue-50 text-blue-900 border border-blue-200 text-xs font-semibold hover:bg-blue-100 shadow-xs">
+                      <Camera className="w-4 h-4 text-blue-600" />
+                      <span>Retake Photo</span>
                       <input
                         type="file"
                         accept="image/*"
@@ -379,10 +378,23 @@ export const ReportItemPage: React.FC = () => {
                         className="hidden"
                       />
                     </label>
+
+                    {/* Gallery Button */}
+                    <label className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 shadow-xs">
+                      <Upload className="w-3.5 h-3.5 text-slate-600" />
+                      <span>Gallery</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageChange}
+                        className="hidden"
+                      />
+                    </label>
+
                     <button
                       type="button"
                       onClick={() => setImagePreview('')}
-                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-semibold text-[#D64545] hover:bg-rose-50"
+                      className="inline-flex items-center gap-1 px-3 py-2 rounded-xl text-xs font-semibold text-rose-600 hover:bg-rose-50"
                     >
                       <X className="w-3.5 h-3.5" />
                       <span>Remove</span>
@@ -390,60 +402,45 @@ export const ReportItemPage: React.FC = () => {
                   </div>
                 </div>
               ) : (
-                <label className="cursor-pointer block py-8 space-y-3">
-                  <div className="w-14 h-14 rounded-full bg-[#E8EEFF] text-[#243B8A] flex items-center justify-center mx-auto">
-                    <Camera className="w-7 h-7" />
+                <div className="py-6 sm:py-8 space-y-4">
+                  <div className="w-16 h-16 rounded-2xl bg-blue-50 text-blue-800 flex items-center justify-center mx-auto shadow-inner">
+                    <Camera className="w-8 h-8 text-blue-600 stroke-[1.8]" />
                   </div>
+                  
                   <div>
-                    <span className="text-sm font-bold text-[#243B8A]">
-                      Take Photo or Select from Gallery
-                    </span>
-                    <p className="text-xs text-[#70798B] mt-1">PNG, JPG, HEIC up to 5MB</p>
+                    <h3 className="text-sm font-bold text-slate-900">Add Item Photo</h3>
+                    <p className="text-xs text-slate-500 mt-0.5">Use your camera right now or pick from your device</p>
                   </div>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    capture="environment"
-                    onChange={handleImageChange}
-                    className="hidden"
-                  />
-                </label>
-              )}
-            </div>
 
-            {/* Quick Demo Image Selection Pills */}
-            <div className="space-y-2">
-              <span className="text-xs font-medium text-[#70798B]">Or select a preset test sample:</span>
-              <div className="flex flex-wrap gap-2 text-xs">
-                <button
-                  type="button"
-                  onClick={() => setImagePreview('https://images.unsplash.com/photo-1598327105666-5b89351aff97?auto=format&fit=crop&w=600&q=80')}
-                  className="px-2.5 py-1 rounded-lg bg-[#F6F7FB] border border-[#E7EAF1] text-[#70798B] hover:text-[#172033]"
-                >
-                  Smartphone
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setImagePreview('https://images.unsplash.com/photo-1590658268037-6bf12165a8df?auto=format&fit=crop&w=600&q=80')}
-                  className="px-2.5 py-1 rounded-lg bg-[#F6F7FB] border border-[#E7EAF1] text-[#70798B] hover:text-[#172033]"
-                >
-                  Earphones
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setImagePreview('https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=600&q=80')}
-                  className="px-2.5 py-1 rounded-lg bg-[#F6F7FB] border border-[#E7EAF1] text-[#70798B] hover:text-[#172033]"
-                >
-                  Backpack
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setImagePreview('https://images.unsplash.com/photo-1602143407151-7111542de6e8?auto=format&fit=crop&w=600&q=80')}
-                  className="px-2.5 py-1 rounded-lg bg-[#F6F7FB] border border-[#E7EAF1] text-[#70798B] hover:text-[#172033]"
-                >
-                  Water Bottle
-                </button>
-              </div>
+                  {/* Dual Action Buttons: Live Camera vs Photo Library */}
+                  <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5 max-w-xs mx-auto pt-1">
+                    <label className="w-full cursor-pointer inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-blue-700 hover:bg-blue-800 text-white text-xs font-semibold shadow-sm active:scale-95 transition-transform">
+                      <Camera className="w-4 h-4" />
+                      <span>Take Photo (Camera)</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        capture="environment"
+                        onChange={handleImageChange}
+                        className="hidden"
+                      />
+                    </label>
+
+                    <label className="w-full cursor-pointer inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-slate-300 hover:bg-slate-50 text-slate-800 text-xs font-semibold shadow-xs active:scale-95 transition-transform">
+                      <Upload className="w-4 h-4 text-slate-600" />
+                      <span>Choose from Gallery</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageChange}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
+
+                  <p className="text-[11px] text-slate-400">Supports JPG, PNG, HEIC up to 5MB</p>
+                </div>
+              )}
             </div>
           </div>
         )}

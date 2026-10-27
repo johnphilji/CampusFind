@@ -164,24 +164,26 @@ export const DesktopHeader: React.FC = () => {
             >
               My Claims & Items
             </NavLink>
-            <NavLink
-              to="/admin"
-              className={({ isActive }) =>
-                `flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
-                  isActive ? 'bg-amber-50 text-amber-900 border border-amber-200/60' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-                }`
-              }
-            >
-              <ShieldCheck className="w-3.5 h-3.5 text-amber-600" />
-              <span>Security Desk</span>
-            </NavLink>
+            {(user.role === 'admin' || user.role === 'security_staff' || activeRole === 'admin') && (
+              <NavLink
+                to="/admin"
+                className={({ isActive }) =>
+                  `flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+                    isActive ? 'bg-amber-50 text-amber-900 border border-amber-200/60' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                  }`
+                }
+              >
+                <ShieldCheck className="w-3.5 h-3.5 text-amber-600" />
+                <span>Security Desk</span>
+              </NavLink>
+            )}
           </nav>
         </div>
 
         {/* Right Action Items */}
         <div className="flex items-center gap-2.5">
-          {/* Quick Role Switcher Pill */}
-          {isAuthenticated && (
+          {/* Quick Role Switcher Pill - only visible if staff or admin */}
+          {isAuthenticated && (user.role === 'admin' || user.role === 'security_staff') && (
             <button
               onClick={toggleRole}
               className={`hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold border transition-all ${
@@ -189,10 +191,10 @@ export const DesktopHeader: React.FC = () => {
                   ? 'bg-amber-50 border-amber-200 text-amber-800'
                   : 'bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-200'
               }`}
-              title="Toggle role perspective for demo"
+              title="Toggle role perspective"
             >
               <span className={`w-2 h-2 rounded-full ${activeRole === 'admin' ? 'bg-amber-600' : 'bg-emerald-500'}`} />
-              <span>{activeRole === 'admin' ? 'Campus Admin' : 'Student Mode'}</span>
+              <span>{activeRole === 'admin' ? 'Campus Admin' : 'Staff Mode'}</span>
             </button>
           )}
 

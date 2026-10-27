@@ -1,6 +1,6 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { AppProvider } from './context/AppContext';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { AppProvider, useApp } from './context/AppContext';
 import { DesktopHeader, BottomNav } from './components/navigation/Navigation';
 import { HomePage } from './pages/HomePage';
 import { ExplorePage } from './pages/ExplorePage';
@@ -12,11 +12,24 @@ import { ProfilePage } from './pages/ProfilePage';
 import { AdminDashboardPage } from './pages/AdminDashboardPage';
 import { AuthModalPage } from './pages/LoginPage';
 
+const ProtectedAdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user, isAuthenticated, activeRole } = useApp();
+
+  // If not logged in or role is 'student', block access and redirect
+  const isAdminOrStaff = isAuthenticated && (activeRole === 'admin' || activeRole === 'security_staff' || user.role === 'admin' || user.role === 'security_staff');
+
+  if (!isAdminOrStaff) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  return <>{children}</>;
+};
+
 export function App() {
   return (
     <AppProvider>
       <BrowserRouter>
-        <div className="min-h-screen bg-[#F6F7FB] flex flex-col text-[#172033]">
+        <div className="min-h-screen bg-[#F8FAFC] flex flex-col text-slate-900">
           {/* Desktop & Tablet Top Header */}
           <DesktopHeader />
 
@@ -31,7 +44,14 @@ export function App() {
               <Route path="/dashboard" element={<DashboardPage />} />
               <Route path="/activity" element={<ActivityPage />} />
               <Route path="/profile" element={<ProfilePage />} />
-              <Route path="/admin" element={<AdminDashboardPage />} />
+              <Route
+                path="/admin"
+                element={
+                  <ProtectedAdminRoute>
+                    <AdminDashboardPage />
+                  </ProtectedAdminRoute>
+                }
+              />
             </Routes>
           </main>
 
