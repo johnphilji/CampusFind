@@ -58,8 +58,8 @@ export async function adminLogin(req: Request, res: Response): Promise<void> {
     // Audit log admin login
     await pool.query(
       `INSERT INTO audit_events (actor_id, action, entity_type, entity_id, metadata)
-       VALUES ($1, 'ADMIN_LOGIN', 'auth', $1, $2)`,
-      [user.id, JSON.stringify({ ip: req.ip, userAgent: req.headers['user-agent'] })]
+       VALUES ($1, 'ADMIN_LOGIN', 'auth', $2, $3)`,
+      [user.id, String(user.id), JSON.stringify({ ip: req.ip, userAgent: req.headers['user-agent'] })]
     );
 
     res.json({
