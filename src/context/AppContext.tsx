@@ -1,16 +1,28 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { CampusItem, AppNotification, ClaimRecord, MatchSuggestion } from '../types';
 import { INITIAL_ITEMS, INITIAL_NOTIFICATIONS, INITIAL_CLAIMS, INITIAL_MATCHES } from '../data/mockData';
+import { api } from '../services/api';
 
-interface UserProfile {
+export interface UserProfile {
+  id?: string;
   name: string;
   email: string;
   studentId: string;
   department: string;
-  role: 'student' | 'admin';
+  role: 'student' | 'admin' | 'security_staff';
   avatar: string;
   phone?: string;
 }
+
+const DEFAULT_GUEST_USER: UserProfile = {
+  name: 'Alex Morgan',
+  email: 'alex.m@college.edu',
+  studentId: 'IEC2023048',
+  department: 'Information Technology, 3rd Year',
+  role: 'student',
+  avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
+  phone: '+1 (555) 234-8901'
+};
 
 interface AppContextType {
   items: CampusItem[];
@@ -18,20 +30,30 @@ interface AppContextType {
   claims: ClaimRecord[];
   matches: MatchSuggestion[];
   user: UserProfile;
-  activeRole: 'student' | 'admin';
+  isAuthenticated: boolean;
+  activeRole: 'student' | 'admin' | 'security_staff';
+  login: (credentials: { email: string; password: string }) => Promise<void>;
+  register: (data: { fullName: string; email: string; password: string; studentId: string; department?: string; phone?: string }) => Promise<void>;
+  logout: () => void;
   toggleRole: () => void;
-  addItem: (item: Omit<CampusItem, 'id' | 'referenceNumber' | 'status' | 'timeAgo'>) => CampusItem;
+  addItem: (item: Omit<CampusItem, 'id' | 'referenceNumber' | 'status' | 'timeAgo'>) => Promise<CampusItem>;
   updateItemStatus: (id: string, status: CampusItem['status']) => void;
-  submitClaim: (itemId: string, details: { name: string; email: string; studentId: string; proof: string }) => ClaimRecord;
-  updateClaimStatus: (claimId: string, status: ClaimRecord['status'], notes?: string) => void;
+  submitClaim: (itemId: string, details: { name: string; email: string; studentId: string; proof: string }) => Promise<ClaimRecord>;
+  updateClaimStatus: (claimId: string, status: ClaimRecord['status'], notes?: string) => Promise<void>;
   markNotificationRead: (id: string) => void;
   markAllNotificationsRead: () => void;
   unreadCount: number;
+  refreshData: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [user, setUser] = useState<UserProfile>(() => {
+    const saved = localStorage.getItem('cf_user');
+    return saved ? JSON.parse(saved) : DEFAULT_GUEST_USER;
+  });
+
   const [items, setItems] = useState<CampusItem[]>(() => {
     const saved = localStorage.getItem('cf_items');
     return saved ? JSON.parse(saved) : INITIAL_ITEMS;
@@ -48,30 +70,133 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   });
 
   const [matches, setMatches] = useState<MatchSuggestion[]>(INITIAL_MATCHES);
+  const [activeRole, setActiveRole] = useState<'student' | 'admin' | 'security_staff'>(
+    user?.role || 'student'
+  );
 
-  const [activeRole, setActiveRole] = useState<'student' | 'admin'>('student');
+  const isAuthenticated = Boolean(localStorage.getItem('cf_auth_token'));
 
-  const [user, setUser] = useState<UserProfile>({
-    name: 'Alex Morgan',
-    email: 'alex.m@college.edu',
-    studentId: 'IEC2023048',
-    department: 'Information Technology, 3rd Year',
-    role: 'student',
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
-    phone: '+1 (555) 234-8901'
-  });
+  // Load backend profile & data on mount if token exists
+  const refreshData = async () => {
+    try {
+      if (api.getToken()) {
+        const profileRes = await api.getProfile();
+        if (profileRes?.user) {
+          const profile: UserProfile = {
+            id: profileRes.user.id,
+            name: profileRes.user.fullName || profileRes.user.full_name,
+            email: profileRes.user.email,
+            studentId: profileRes.user.studentId || profileRes.user.student_id,
+            department: profileRes.user.department || 'Campus Department',
+            role: profileRes.user.role || 'student',
+            avatar: profileRes.user.avatarUrl || profileRes.user.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
+            phone: profileRes.user.phoneNumber || profileRes.user.phone_number
+          };
+          setUser(profile);
+          setActiveRole(profile.role);
+          localStorage.setItem('cf_user', JSON.stringify(profile));
+        }
+      }
+
+      // Fetch reports from backend
+      const repRes = await api.getReports();
+      if (repRes?.data && repRes.data.length > 0) {
+        const mappedItems: CampusItem[] = repRes.data.map((r: any) => ({
+          id: r.id,
+          referenceNumber: r.reference_number || r.referenceNumber,
+          title: r.title,
+          type: r.type,
+          category: r.category,
+          location: r.location,
+          date: r.report_date || r.reportDate || 'Recent',
+          timeAgo: 'Recently updated',
+          description: r.description,
+          imageUrl: r.image_url || r.imageUrl,
+          status: r.status,
+          identifyingQuestion: r.identifying_question || r.identifyingQuestion,
+          reporterName: r.reporter_name || r.reporterName,
+          reporterDepartment: r.reporter_department || r.reporterDepartment
+        }));
+        setItems(mappedItems);
+        localStorage.setItem('cf_items', JSON.stringify(mappedItems));
+      }
+
+      // Fetch claims if authenticated
+      if (api.getToken()) {
+        const claimRes = await api.getClaims().catch(() => null);
+        if (claimRes?.claims) {
+          const mappedClaims: ClaimRecord[] = claimRes.claims.map((c: any) => ({
+            id: c.claim_reference || c.id,
+            itemId: c.report_id,
+            claimantId: c.claimant_id || 'user-1',
+            claimantName: c.claimant_name || 'Student',
+            claimantEmail: c.claimant_email || 'student@college.edu',
+            itemTitle: c.item_title || 'Campus Item',
+            itemType: c.item_type || 'found',
+            itemLocation: c.item_location || 'Campus',
+            submittedAt: new Date(c.created_at).toLocaleDateString(),
+            status: c.status,
+            proofDetails: c.proof_details,
+            adminNotes: c.admin_notes
+          }));
+          setClaims(mappedClaims);
+          localStorage.setItem('cf_claims', JSON.stringify(mappedClaims));
+        }
+      }
+    } catch (err) {
+      console.warn('Backend sync warning (using cached data):', err);
+    }
+  };
 
   useEffect(() => {
-    localStorage.setItem('cf_items', JSON.stringify(items));
-  }, [items]);
+    refreshData();
+  }, []);
 
-  useEffect(() => {
-    localStorage.setItem('cf_notifications', JSON.stringify(notifications));
-  }, [notifications]);
+  const login = async (credentials: { email: string; password: string }) => {
+    const res = await api.login(credentials);
+    api.setToken(res.token);
+    const profile: UserProfile = {
+      id: res.user.id,
+      name: res.user.fullName || res.user.full_name,
+      email: res.user.email,
+      studentId: res.user.studentId || res.user.student_id,
+      department: res.user.department || 'Campus Department',
+      role: res.user.role || 'student',
+      avatar: res.user.avatarUrl || res.user.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
+      phone: res.user.phoneNumber || res.user.phone_number
+    };
+    setUser(profile);
+    setActiveRole(profile.role);
+    localStorage.setItem('cf_user', JSON.stringify(profile));
+    await refreshData();
+  };
 
-  useEffect(() => {
-    localStorage.setItem('cf_claims', JSON.stringify(claims));
-  }, [claims]);
+  const register = async (data: { fullName: string; email: string; password: string; studentId: string; department?: string; phone?: string }) => {
+    const res = await api.register(data);
+    api.setToken(res.token);
+    const profile: UserProfile = {
+      id: res.user.id,
+      name: res.user.fullName || res.user.full_name,
+      email: res.user.email,
+      studentId: res.user.studentId || res.user.student_id,
+      department: res.user.department || 'Campus Department',
+      role: res.user.role || 'student',
+      avatar: res.user.avatarUrl || res.user.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
+      phone: res.user.phoneNumber || res.user.phone_number
+    };
+    setUser(profile);
+    setActiveRole(profile.role);
+    localStorage.setItem('cf_user', JSON.stringify(profile));
+    await refreshData();
+  };
+
+  const logout = () => {
+    api.removeToken();
+    localStorage.removeItem('cf_user');
+    localStorage.removeItem('cf_auth_token');
+    setUser(DEFAULT_GUEST_USER);
+    setActiveRole('student');
+  };
 
   const toggleRole = () => {
     setActiveRole(prev => {
@@ -85,72 +210,117 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
   };
 
-  const addItem = (newItemData: Omit<CampusItem, 'id' | 'referenceNumber' | 'status' | 'timeAgo'>) => {
-    const refNum = `CF-2026-${Math.floor(1000 + Math.random() * 9000)}`;
-    const newItem: CampusItem = {
-      ...newItemData,
-      id: `item-${Date.now()}`,
-      referenceNumber: refNum,
-      status: 'open',
-      timeAgo: 'Just now'
-    };
+  const addItem = async (newItemData: Omit<CampusItem, 'id' | 'referenceNumber' | 'status' | 'timeAgo'>): Promise<CampusItem> => {
+    let createdItem: CampusItem;
 
-    setItems(prev => [newItem, ...prev]);
+    try {
+      if (api.getToken()) {
+        const res = await api.createReport({
+          title: newItemData.title,
+          type: newItemData.type,
+          category: newItemData.category,
+          location: newItemData.location,
+          reportDate: newItemData.date || new Date().toISOString().split('T')[0],
+          description: newItemData.description,
+          imageUrl: newItemData.imageUrl,
+          identifyingQuestion: newItemData.identifyingQuestion
+        });
 
-    // Add notification
-    const newNotif: AppNotification = {
+        const r = res.report;
+        createdItem = {
+          id: r.id,
+          referenceNumber: r.reference_number,
+          title: r.title,
+          type: r.type,
+          category: r.category,
+          location: r.location,
+          date: r.report_date,
+          timeAgo: 'Just now',
+          description: r.description,
+          imageUrl: r.image_url,
+          status: r.status,
+          identifyingQuestion: r.identifying_question,
+          reporterName: user?.name,
+          reporterDepartment: user?.department
+        };
+      } else {
+        throw new Error('Not logged in');
+      }
+    } catch {
+      // Local fallback
+      const refNum = `CF-2026-${Math.floor(1000 + Math.random() * 9000)}`;
+      createdItem = {
+        ...newItemData,
+        id: `item-${Date.now()}`,
+        referenceNumber: refNum,
+        status: 'open',
+        timeAgo: 'Just now'
+      };
+    }
+
+    setItems(prev => [createdItem, ...prev]);
+
+    const notif: AppNotification = {
       id: `notif-${Date.now()}`,
-      title: `${newItem.type === 'lost' ? 'Lost' : 'Found'} Item Registered`,
-      message: `Your report for "${newItem.title}" has been published with reference ${refNum}.`,
+      title: `${createdItem.type === 'lost' ? 'Lost' : 'Found'} Item Registered`,
+      message: `Your report for "${createdItem.title}" has been published with ID ${createdItem.referenceNumber}.`,
       timestamp: 'Just now',
       read: false,
       type: 'report',
-      targetId: newItem.id
+      targetId: createdItem.id
     };
-    setNotifications(prev => [newNotif, ...prev]);
+    setNotifications(prev => [notif, ...prev]);
 
-    // Check for smart matches
-    const possible = items.find(
-      i => i.type !== newItem.type &&
-      (i.category === newItem.category || i.location === newItem.location)
-    );
-
-    if (possible) {
-      const newMatch: MatchSuggestion = {
-        id: `match-${Date.now()}`,
-        lostItemId: newItem.type === 'lost' ? newItem.id : possible.id,
-        foundItemId: newItem.type === 'found' ? newItem.id : possible.id,
-        similarityScore: 89,
-        reason: `Matched category "${newItem.category}" and proximity to campus location.`,
-        lostItem: newItem.type === 'lost' ? newItem : possible,
-        foundItem: newItem.type === 'found' ? newItem : possible,
-        createdAt: 'Just now'
-      };
-      setMatches(prev => [newMatch, ...prev]);
-    }
-
-    return newItem;
+    return createdItem;
   };
 
   const updateItemStatus = (id: string, status: CampusItem['status']) => {
     setItems(prev => prev.map(item => item.id === id ? { ...item, status } : item));
   };
 
-  const submitClaim = (itemId: string, details: { name: string; email: string; studentId: string; proof: string }) => {
+  const submitClaim = async (itemId: string, details: { name: string; email: string; studentId: string; proof: string }): Promise<ClaimRecord> => {
     const targetItem = items.find(i => i.id === itemId);
-    const newClaim: ClaimRecord = {
-      id: `CLM-${Math.floor(1000 + Math.random() * 9000)}`,
-      itemId,
-      claimantName: details.name,
-      claimantEmail: details.email,
-      claimantId: details.studentId,
-      proofDetails: details.proof,
-      status: 'Under Review',
-      submittedAt: new Date().toLocaleString([], { dateStyle: 'short', timeStyle: 'short' }),
-      itemTitle: targetItem ? targetItem.title : 'Campus Item',
-      itemType: targetItem ? targetItem.type : 'found',
-      itemLocation: targetItem ? targetItem.location : 'Campus'
-    };
+    let newClaim: ClaimRecord;
+
+    try {
+      if (api.getToken()) {
+        const res = await api.submitClaim(itemId, details.proof);
+        const c = res.claim;
+        newClaim = {
+          id: c.claim_reference || c.id,
+          itemId,
+          claimantId: c.claimant_id || user.id || 'claimant-1',
+          claimantName: details.name,
+          claimantEmail: details.email,
+          itemTitle: targetItem ? targetItem.title : 'Campus Item',
+          itemType: targetItem ? targetItem.type : 'found',
+          itemLocation: targetItem ? targetItem.location : 'Campus',
+          submittedAt: new Date().toLocaleDateString(),
+          status: 'Submitted',
+          proofDetails: details.proof
+        };
+      } else {
+        throw new Error('Not authenticated');
+      }
+    } catch (err: any) {
+      if (err.message && err.message.includes('already have an active claim')) {
+        throw err;
+      }
+      const claimRef = `CLM-${Math.floor(1000 + Math.random() * 9000)}`;
+      newClaim = {
+        id: claimRef,
+        itemId,
+        claimantId: user.id || 'claimant-1',
+        claimantName: details.name,
+        claimantEmail: details.email,
+        itemTitle: targetItem ? targetItem.title : 'Campus Item',
+        itemType: targetItem ? targetItem.type : 'found',
+        itemLocation: targetItem ? targetItem.location : 'Campus',
+        submittedAt: new Date().toLocaleDateString(),
+        status: 'Submitted',
+        proofDetails: details.proof
+      };
+    }
 
     setClaims(prev => [newClaim, ...prev]);
     updateItemStatus(itemId, 'under_review');
@@ -169,7 +339,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return newClaim;
   };
 
-  const updateClaimStatus = (claimId: string, status: ClaimRecord['status'], notes?: string) => {
+  const updateClaimStatus = async (claimId: string, status: ClaimRecord['status'], notes?: string): Promise<void> => {
+    try {
+      if (api.getToken()) {
+        await api.reviewClaim(claimId, status, notes);
+      }
+    } catch (err) {
+      console.warn('API review claim fallback:', err);
+    }
+
     setClaims(prev => prev.map(c => {
       if (c.id === claimId) {
         return { ...c, status, adminNotes: notes || c.adminNotes };
@@ -180,7 +358,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const targetClaim = claims.find(c => c.id === claimId);
     if (targetClaim) {
       if (status === 'Approved' || status === 'Item Returned') {
-        updateItemStatus(targetClaim.itemId, 'resolved');
+        updateItemStatus(targetClaim.itemId, status === 'Item Returned' ? 'resolved' : 'claimed');
       }
       const notif: AppNotification = {
         id: `notif-${Date.now()}`,
@@ -213,7 +391,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         claims,
         matches,
         user,
+        isAuthenticated,
         activeRole,
+        login,
+        register,
+        logout,
         toggleRole,
         addItem,
         updateItemStatus,
@@ -221,7 +403,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         updateClaimStatus,
         markNotificationRead,
         markAllNotificationsRead,
-        unreadCount
+        unreadCount,
+        refreshData
       }}
     >
       {children}

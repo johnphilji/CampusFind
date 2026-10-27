@@ -1,7 +1,7 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 class ApiClient {
-  private getToken(): string | null {
+  public getToken(): string | null {
     return localStorage.getItem('cf_auth_token');
   }
 
@@ -38,15 +38,15 @@ class ApiClient {
   }
 
   // --- Auth endpoints ---
-  public register(data: any) {
-    return this.request<{ token: string; user: any }>('/auth/register', {
+  public register(data: { fullName: string; email: string; password: string; studentId: string; department?: string; phone?: string }) {
+    return this.request<{ message: string; token: string; user: any }>('/auth/register', {
       method: 'POST',
       body: JSON.stringify(data),
     });
   }
 
-  public login(data: any) {
-    return this.request<{ token: string; user: any }>('/auth/login', {
+  public login(data: { email: string; password: string }) {
+    return this.request<{ message: string; token: string; user: any }>('/auth/login', {
       method: 'POST',
       body: JSON.stringify(data),
     });
@@ -93,10 +93,10 @@ class ApiClient {
   }
 
   // --- S3 Presign endpoint ---
-  public getPresignedUpload(filename: string, contentType: string) {
+  public getPresignedUpload(filename: string, contentType: string, isPrivateEvidence: boolean = false) {
     return this.request<{ uploadUrl: string; publicUrl: string; key: string }>('/upload/presign', {
       method: 'POST',
-      body: JSON.stringify({ filename, contentType }),
+      body: JSON.stringify({ filename, contentType, isPrivateEvidence }),
     });
   }
 }

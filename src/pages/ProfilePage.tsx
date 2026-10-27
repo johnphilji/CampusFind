@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   User,
   Moon,
@@ -17,7 +18,8 @@ import {
 import { useApp } from '../context/AppContext';
 
 export const ProfilePage: React.FC = () => {
-  const { user, activeRole, toggleRole } = useApp();
+  const { user, activeRole, toggleRole, logout, isAuthenticated } = useApp();
+  const navigate = useNavigate();
 
   // Settings states
   const [pushNotifs, setPushNotifs] = useState(true);
@@ -244,12 +246,15 @@ export const ProfilePage: React.FC = () => {
             </div>
 
             <button
-              onClick={() => alert('Student signed out (Session reset for demo)')}
+              onClick={() => {
+                logout();
+                navigate('/login');
+              }}
               className="w-full flex items-center justify-between p-3 rounded-xl text-[#D64545] hover:bg-rose-50 transition-colors"
             >
               <div className="flex items-center gap-3">
                 <LogOut className="w-4 h-4" />
-                <span className="text-xs font-semibold">Sign Out from Session</span>
+                <span className="text-xs font-semibold">{isAuthenticated ? 'Sign Out from Session' : 'Go to Sign In Page'}</span>
               </div>
               <ChevronRight className="w-4 h-4" />
             </button>

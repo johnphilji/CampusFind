@@ -85,9 +85,9 @@ export const ReportItemPage: React.FC = () => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    setTimeout(() => {
+    setTimeout(async () => {
       const finalLocation = location === 'Other Campus Area' && customLocation ? customLocation : location;
-      const created = addItem({
+      const created = await addItem({
         title,
         type: reportType,
         category,

@@ -10,6 +10,7 @@ import { DashboardPage } from './pages/DashboardPage';
 import { ActivityPage } from './pages/ActivityPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { AdminDashboardPage } from './pages/AdminDashboardPage';
+import { AuthModalPage } from './pages/LoginPage';
 
 export function App() {
   return (
@@ -23,6 +24,7 @@ export function App() {
           <main className="flex-1">
             <Routes>
               <Route path="/" element={<HomePage />} />
+              <Route path="/login" element={<AuthModalPage />} />
               <Route path="/explore" element={<ExplorePage />} />
               <Route path="/report" element={<ReportItemPage />} />
               <Route path="/item/:id" element={<ItemDetailsPage />} />

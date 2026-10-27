@@ -1,10 +1,10 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
-import { Home, Compass, Plus, Activity, User, ShieldCheck, Bell } from 'lucide-react';
+import { NavLink, useNavigate } from 'react-router-dom';
+import { Home, Compass, Plus, Activity, User, ShieldCheck, Bell, LogIn, LogOut } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 
 export const BottomNav: React.FC = () => {
-  const { unreadCount } = useApp();
+  const { unreadCount, isAuthenticated } = useApp();
 
   return (
     <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-[#E7EAF1] bottom-nav-shadow px-3 pb-[env(safe-area-inset-bottom,8px)] pt-2">
@@ -79,7 +79,7 @@ export const BottomNav: React.FC = () => {
         </NavLink>
 
         <NavLink
-          to="/profile"
+          to={isAuthenticated ? "/profile" : "/login"}
           className={({ isActive }) =>
             `flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-colors ${
               isActive ? 'text-[#243B8A] font-semibold' : 'text-[#70798B] hover:text-[#172033]'
@@ -89,9 +89,9 @@ export const BottomNav: React.FC = () => {
           {({ isActive }) => (
             <>
               <div className={`p-1 rounded-lg ${isActive ? 'bg-[#E8EEFF]' : ''}`}>
-                <User className="w-5 h-5 stroke-[2.2]" />
+                {isAuthenticated ? <User className="w-5 h-5 stroke-[2.2]" /> : <LogIn className="w-5 h-5 stroke-[2.2]" />}
               </div>
-              <span className="text-[11px] mt-0.5 tracking-tight">Profile</span>
+              <span className="text-[11px] mt-0.5 tracking-tight">{isAuthenticated ? "Profile" : "Sign In"}</span>
             </>
           )}
         </NavLink>
@@ -101,7 +101,13 @@ export const BottomNav: React.FC = () => {
 };
 
 export const DesktopHeader: React.FC = () => {
-  const { user, activeRole, toggleRole, unreadCount } = useApp();
+  const { user, activeRole, toggleRole, unreadCount, isAuthenticated, logout } = useApp();
+  const navigate = useNavigate();
+
+  const handleLogoutClick = () => {
+    logout();
+    navigate('/login');
+  };
 
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-[#E7EAF1]">
@@ -175,18 +181,20 @@ export const DesktopHeader: React.FC = () => {
         {/* Right Action Items */}
         <div className="flex items-center gap-3">
           {/* Quick Role Switcher Pill */}
-          <button
-            onClick={toggleRole}
-            className={`hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border transition-all ${
-              activeRole === 'admin'
-                ? 'bg-amber-100/70 border-amber-300 text-amber-900'
-                : 'bg-slate-100 border-[#E7EAF1] text-[#70798B] hover:bg-slate-200'
-            }`}
-            title="Toggle between Student and Admin perspective for demo"
-          >
-            <span className={`w-2 h-2 rounded-full ${activeRole === 'admin' ? 'bg-amber-600' : 'bg-[#0F9D91]'}`} />
-            <span>View as: {activeRole === 'admin' ? 'Admin Officer' : 'Student'}</span>
-          </button>
+          {isAuthenticated && (
+            <button
+              onClick={toggleRole}
+              className={`hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border transition-all ${
+                activeRole === 'admin'
+                  ? 'bg-amber-100/70 border-amber-300 text-amber-900'
+                  : 'bg-slate-100 border-[#E7EAF1] text-[#70798B] hover:bg-slate-200'
+              }`}
+              title="Toggle between Student and Admin perspective for demo"
+            >
+              <span className={`w-2 h-2 rounded-full ${activeRole === 'admin' ? 'bg-amber-600' : 'bg-[#0F9D91]'}`} />
+              <span>View as: {activeRole === 'admin' ? 'Admin Officer' : 'Student'}</span>
+            </button>
+          )}
 
           <NavLink
             to="/report"
@@ -210,20 +218,40 @@ export const DesktopHeader: React.FC = () => {
             )}
           </NavLink>
 
-          {/* Profile pill */}
-          <NavLink
-            to="/profile"
-            className="flex items-center gap-2 p-1 pl-2 rounded-full hover:bg-slate-100 transition-colors border border-[#E7EAF1]"
-          >
-            <span className="text-xs font-semibold text-[#172033] hidden lg:block">
-              {user.name.split(' ')[0]}
-            </span>
-            <img
-              src={user.avatar}
-              alt={user.name}
-              className="w-7 h-7 rounded-full object-cover ring-1 ring-[#3559C7]/20"
-            />
-          </NavLink>
+          {/* Profile / Login Button */}
+          {isAuthenticated && user ? (
+            <div className="flex items-center gap-2">
+              <NavLink
+                to="/profile"
+                className="flex items-center gap-2 p-1 pl-2.5 rounded-full hover:bg-slate-100 transition-colors border border-[#E7EAF1]"
+              >
+                <span className="text-xs font-semibold text-[#172033] hidden lg:block">
+                  {user.name.split(' ')[0]}
+                </span>
+                <img
+                  src={user.avatar}
+                  alt={user.name}
+                  className="w-7 h-7 rounded-full object-cover ring-1 ring-[#3559C7]/20"
+                />
+              </NavLink>
+
+              <button
+                onClick={handleLogoutClick}
+                className="p-2 rounded-xl text-[#70798B] hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                title="Sign Out"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            </div>
+          ) : (
+            <NavLink
+              to="/login"
+              className="inline-flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-[#172033] px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all border border-[#E7EAF1]"
+            >
+              <LogIn className="w-4 h-4 text-[#243B8A]" />
+              <span>Sign In</span>
+            </NavLink>
+          )}
         </div>
       </div>
     </header>
