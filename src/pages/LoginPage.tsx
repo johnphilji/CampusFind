@@ -12,6 +12,7 @@ export const AuthModalPage: React.FC = () => {
   const [department, setDepartment] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
 
   const { login, register, isAuthenticated, user, logout } = useApp();
   const navigate = useNavigate();
@@ -29,12 +30,12 @@ export const AuthModalPage: React.FC = () => {
         if (!fullName.trim() || !email.trim() || !password || !studentId.trim()) {
           throw new Error('Please fill in all required fields.');
         }
-        await register({ fullName: fullName.trim(), email: email.trim(), password, studentId: studentId.trim(), department: department.trim() });
+        await register({ fullName: fullName.trim(), email: email.trim(), password, studentId: studentId.trim(), department: department.trim(), rememberMe });
       } else {
         if (!email.trim() || !password) {
           throw new Error('Please enter your registered email and password.');
         }
-        await login({ email: email.trim(), password });
+        await login({ email: email.trim(), password, rememberMe });
       }
       navigate(redirectPath, { replace: true });
     } catch (err: any) {
@@ -227,6 +228,22 @@ export const AuthModalPage: React.FC = () => {
                 className="w-full pl-10 pr-3.5 py-2.5 text-xs rounded-xl border border-[#E7EAF1] focus:outline-none focus:ring-2 focus:ring-[#243B8A]/20 focus:border-[#243B8A] bg-slate-50/50"
               />
             </div>
+          </div>
+
+          {/* Remember Me Option */}
+          <div className="flex items-center justify-between pt-1">
+            <label className="flex items-center gap-2 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                className="w-4 h-4 rounded text-[#243B8A] focus:ring-[#243B8A]/30 border-[#D1D5DB] transition cursor-pointer"
+              />
+              <span className="text-xs text-[#4B5563] font-medium">Remember me on this device</span>
+            </label>
+            <span className="text-[11px] text-[#9CA3AF]">
+              {rememberMe ? 'Stay signed in' : 'Session only'}
+            </span>
           </div>
 
           <button

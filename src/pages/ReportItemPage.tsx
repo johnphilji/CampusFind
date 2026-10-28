@@ -24,7 +24,7 @@ import { CAMPUS_CATEGORIES, CAMPUS_LOCATIONS } from '../data/mockData';
 import { api } from '../services/api';
 
 export const ReportItemPage: React.FC = () => {
-  const { addItem, user } = useApp();
+  const { addItem, user, isAuthenticated } = useApp();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
@@ -158,7 +158,7 @@ export const ReportItemPage: React.FC = () => {
               Report Published Successfully
             </span>
             <h2 className="text-xl sm:text-2xl font-bold text-[#172033] mt-2">
-              Thank you, {user.name.split(' ')[0]}!
+              Thank you, {user.name ? user.name.split(' ')[0] : 'Student'}!
             </h2>
             <p className="text-xs sm:text-sm text-[#70798B] mt-1">
               Your {reportType} item report has been cataloged in the college database.
@@ -200,6 +200,62 @@ export const ReportItemPage: React.FC = () => {
               className="flex-1 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-[#172033] font-semibold text-xs sm:text-sm transition-all"
             >
               Back to Home
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // AUTHENTICATION GUARD: User must sign in before reporting a lost or found item
+  if (!isAuthenticated || !user?.id) {
+    return (
+      <div className="pb-24 md:pb-16 max-w-lg mx-auto px-4 pt-10">
+        <div className="bg-white rounded-3xl border border-[#E7EAF1] p-6 sm:p-9 text-center card-shadow space-y-6">
+          <div className="w-16 h-16 rounded-3xl bg-blue-50 border border-blue-100 text-[#243B8A] flex items-center justify-center mx-auto shadow-sm">
+            <Lock className="w-8 h-8 stroke-[2.2]" />
+          </div>
+
+          <div>
+            <span className="text-[11px] font-bold uppercase tracking-wider text-[#243B8A] bg-[#E8EEFF] px-3 py-1 rounded-full">
+              Authentication Required
+            </span>
+            <h2 className="text-2xl font-bold text-[#172033] mt-3">
+              Sign In to Report an Item
+            </h2>
+            <p className="text-xs sm:text-sm text-[#70798B] mt-1.5 leading-relaxed">
+              To preserve campus custody safety and deliver instant email match notifications, you must be signed in with your college account before submitting a lost or found item report.
+            </p>
+          </div>
+
+          <div className="p-4 rounded-2xl bg-[#F6F7FB] border border-[#E7EAF1] text-left space-y-2.5 text-xs text-[#475569]">
+            <div className="flex items-center gap-2">
+              <Shield className="w-4 h-4 text-[#243B8A] flex-shrink-0" />
+              <span>Verified student custody ownership & fraud protection</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Clock className="w-4 h-4 text-[#0F9D91] flex-shrink-0" />
+              <span>Instant email alerts sent to you when an item match is found</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-amber-500 flex-shrink-0" />
+              <span>Option to &quot;Remember me&quot; so you stay signed in seamlessly</span>
+            </div>
+          </div>
+
+          <div className="pt-2 flex flex-col gap-3">
+            <button
+              onClick={() => navigate('/login', { state: { from: { pathname: '/report' } } })}
+              className="w-full py-3.5 rounded-xl bg-gradient-to-r from-[#243B8A] to-[#3B66DE] hover:from-[#1D3070] hover:to-[#2F54BA] text-white font-semibold text-xs sm:text-sm shadow-md shadow-[#243B8A]/25 transition-all flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <span>Sign In / Create Account</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => navigate('/')}
+              className="w-full py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 font-semibold text-xs transition-colors"
+            >
+              Return to Campus Home
             </button>
           </div>
         </div>

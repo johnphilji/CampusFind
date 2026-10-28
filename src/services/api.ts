@@ -2,15 +2,22 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 class ApiClient {
   public getToken(): string | null {
-    return localStorage.getItem('cf_auth_token');
+    return localStorage.getItem('cf_auth_token') || sessionStorage.getItem('cf_auth_token');
   }
 
-  public setToken(token: string): void {
-    localStorage.setItem('cf_auth_token', token);
+  public setToken(token: string, rememberMe: boolean = true): void {
+    if (rememberMe) {
+      localStorage.setItem('cf_auth_token', token);
+      sessionStorage.removeItem('cf_auth_token');
+    } else {
+      sessionStorage.setItem('cf_auth_token', token);
+      localStorage.removeItem('cf_auth_token');
+    }
   }
 
   public removeToken(): void {
     localStorage.removeItem('cf_auth_token');
+    sessionStorage.removeItem('cf_auth_token');
   }
 
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {

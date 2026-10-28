@@ -32,8 +32,8 @@ interface AppContextType {
   user: UserProfile;
   isAuthenticated: boolean;
   activeRole: 'student' | 'admin' | 'security_staff';
-  login: (credentials: { email: string; password: string }) => Promise<void>;
-  register: (data: { fullName: string; email: string; password: string; studentId: string; department?: string; phone?: string }) => Promise<void>;
+  login: (credentials: { email: string; password: string; rememberMe?: boolean }) => Promise<void>;
+  register: (data: { fullName: string; email: string; password: string; studentId: string; department?: string; phone?: string; rememberMe?: boolean }) => Promise<void>;
   logout: () => void;
   addItem: (item: Omit<CampusItem, 'id' | 'referenceNumber' | 'status' | 'timeAgo'>) => Promise<CampusItem>;
   updateItemStatus: (id: string, status: CampusItem['status']) => void;
@@ -49,8 +49,8 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<UserProfile>(() => {
-    const hasToken = localStorage.getItem('cf_auth_token');
-    const saved = localStorage.getItem('cf_user');
+    const hasToken = api.getToken();
+    const saved = localStorage.getItem('cf_user') || sessionStorage.getItem('cf_user');
     if (hasToken && saved) {
       try {
         return JSON.parse(saved);
@@ -81,7 +81,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     user?.role || 'student'
   );
 
-  const isAuthenticated = Boolean(localStorage.getItem('cf_auth_token'));
+  const isAuthenticated = Boolean(api.getToken());
 
   // Load backend profile & data on mount if token exists
   const refreshData = async () => {
@@ -181,9 +181,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     refreshData();
   }, []);
 
-  const login = async (credentials: { email: string; password: string }) => {
-    const res = await api.login(credentials);
-    api.setToken(res.token);
+  const login = async (credentials: { email: string; password: string; rememberMe?: boolean }) => {
+    const remember = credentials.rememberMe !== false;
+    const res = await api.login({ email: credentials.email, password: credentials.password });
+    api.setToken(res.token, remember);
     const profile: UserProfile = {
       id: res.user.id,
       name: res.user.fullName || res.user.full_name,
@@ -196,13 +197,27 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
     setUser(profile);
     setActiveRole(profile.role);
-    localStorage.setItem('cf_user', JSON.stringify(profile));
+    if (remember) {
+      localStorage.setItem('cf_user', JSON.stringify(profile));
+      sessionStorage.removeItem('cf_user');
+    } else {
+      sessionStorage.setItem('cf_user', JSON.stringify(profile));
+      localStorage.removeItem('cf_user');
+    }
     await refreshData();
   };
 
-  const register = async (data: { fullName: string; email: string; password: string; studentId: string; department?: string; phone?: string }) => {
-    const res = await api.register(data);
-    api.setToken(res.token);
+  const register = async (data: { fullName: string; email: string; password: string; studentId: string; department?: string; phone?: string; rememberMe?: boolean }) => {
+    const remember = data.rememberMe !== false;
+    const res = await api.register({
+      fullName: data.fullName,
+      email: data.email,
+      password: data.password,
+      studentId: data.studentId,
+      department: data.department,
+      phone: data.phone
+    });
+    api.setToken(res.token, remember);
     const profile: UserProfile = {
       id: res.user.id,
       name: res.user.fullName || res.user.full_name,
@@ -215,14 +230,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
     setUser(profile);
     setActiveRole(profile.role);
-    localStorage.setItem('cf_user', JSON.stringify(profile));
+    if (remember) {
+      localStorage.setItem('cf_user', JSON.stringify(profile));
+      sessionStorage.removeItem('cf_user');
+    } else {
+      sessionStorage.setItem('cf_user', JSON.stringify(profile));
+      localStorage.removeItem('cf_user');
+    }
     await refreshData();
   };
 
   const logout = () => {
     api.removeToken();
     localStorage.removeItem('cf_user');
-    localStorage.removeItem('cf_auth_token');
+    sessionStorage.removeItem('cf_user');
     setUser(DEFAULT_GUEST_USER);
     setActiveRole('student');
   };
