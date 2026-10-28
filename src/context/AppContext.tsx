@@ -36,7 +36,7 @@ interface AppContextType {
   register: (data: { fullName: string; email: string; password: string; studentId: string; department?: string; phone?: string; rememberMe?: boolean }) => Promise<void>;
   logout: () => void;
   addItem: (item: Omit<CampusItem, 'id' | 'referenceNumber' | 'status' | 'timeAgo'>) => Promise<CampusItem>;
-  updateItemStatus: (id: string, status: CampusItem['status']) => void;
+  updateItemStatus: (id: string, status: CampusItem['status'], notes?: string) => Promise<void>;
   submitClaim: (itemId: string, details: { name: string; email: string; studentId: string; proof: string }) => Promise<ClaimRecord>;
   updateClaimStatus: (claimId: string, status: ClaimRecord['status'], notes?: string) => Promise<void>;
   markNotificationRead: (id: string) => void;
@@ -122,6 +122,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           status: r.status,
           identifyingQuestion: r.identifying_question || r.identifyingQuestion,
           reporterName: r.reporter_name || r.reporterName,
+          reporterEmail: r.reporter_email || r.reporterEmail,
+          reporterId: r.reporter_id || r.reporterId,
           reporterDepartment: r.reporter_department || r.reporterDepartment
         }));
         setItems(mappedItems);
@@ -312,8 +314,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return createdItem;
   };
 
-  const updateItemStatus = (id: string, status: CampusItem['status']) => {
-    setItems(prev => prev.map(item => item.id === id ? { ...item, status } : item));
+  const updateItemStatus = async (id: string, status: CampusItem['status'], notes?: string): Promise<void> => {
+    setItems(prev => {
+      const updated = prev.map(item => item.id === id ? { ...item, status } : item);
+      localStorage.setItem('cf_items', JSON.stringify(updated));
+      return updated;
+    });
+
+    if (api.getToken()) {
+      try {
+        await api.adminUpdateReportStatus(id, status, notes);
+      } catch (err) {
+        console.warn('API updateItemStatus error:', err);
+      }
+    }
   };
 
   const submitClaim = async (itemId: string, details: { name: string; email: string; studentId: string; proof: string }): Promise<ClaimRecord> => {

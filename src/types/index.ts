@@ -49,6 +49,8 @@ export interface CampusItem {
   imageUrl: string;
   status: ItemStatus;
   reporterName: string;
+  reporterEmail?: string;
+  reporterId?: string;
   reporterDepartment?: string;
   referenceNumber: string;
   identifyingQuestion?: string;

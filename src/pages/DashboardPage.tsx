@@ -18,9 +18,22 @@ export const DashboardPage: React.FC = () => {
   const { items, claims, matches, user } = useApp();
   const [activeTab, setActiveTab] = useState<'all' | 'lost' | 'found' | 'claims'>('all');
 
-  const myLostItems = items.filter(i => i.type === 'lost' && i.reporterName.includes(user.name.split(' ')[0]));
-  const myFoundItems = items.filter(i => i.type === 'found' && i.reporterName.includes(user.name.split(' ')[0]));
-  const myReports = items.filter(i => i.reporterName.includes(user.name.split(' ')[0]) || i.reporterName === 'Alex Morgan');
+  const userFirstName = user.name ? user.name.split(' ')[0].toLowerCase() : '';
+  const myReports = items.filter(i => {
+    if (!userFirstName) return false;
+    const repName = (i.reporterName || '').toLowerCase();
+    return repName.includes(userFirstName) || i.reporterEmail === user.email;
+  });
+  const myLostItems = myReports.filter(i => i.type === 'lost');
+  const myFoundItems = myReports.filter(i => i.type === 'found');
+
+  // Only show match suggestions if the found item is still open and unreturned
+  const activeMatches = matches.filter(m => {
+    const foundItem = items.find(i => i.id === m.foundItemId);
+    const itemStatus = foundItem?.status || m.foundItem?.status;
+    const isAlreadyClaimed = claims.some(c => (c.itemId === m.foundItemId) && (c.status === 'Approved' || c.status === 'Item Returned'));
+    return itemStatus === 'open' && !isAlreadyClaimed;
+  });
 
   const getClaimStatusBadge = (status: string) => {
     switch (status) {
@@ -90,14 +103,14 @@ export const DashboardPage: React.FC = () => {
         <div className="bg-white p-4 rounded-2xl border border-[#E7EAF1] card-shadow">
           <span className="text-xs font-semibold text-[#70798B] block">Potential Matches</span>
           <div className="flex items-baseline justify-between mt-2">
-            <span className="text-2xl font-black text-[#0F9D91]">{matches.length}</span>
+            <span className="text-2xl font-black text-[#0F9D91]">{activeMatches.length}</span>
             <span className="text-[11px] text-teal-700 bg-teal-50 px-2 py-0.5 rounded-full font-medium">AI Suggestions</span>
           </div>
         </div>
       </div>
 
       {/* Suggested Matches Section */}
-      {matches.length > 0 && (
+      {activeMatches.length > 0 && (
         <div className="bg-white rounded-3xl border border-[#E7EAF1] p-5 card-shadow space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -112,7 +125,7 @@ export const DashboardPage: React.FC = () => {
           </div>
 
           <div className="space-y-3">
-            {matches.map(m => (
+            {activeMatches.map(m => (
               <div
                 key={m.id}
                 className="p-4 rounded-2xl bg-gradient-to-r from-amber-50/50 to-white border border-amber-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-4"

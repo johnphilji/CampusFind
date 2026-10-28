@@ -417,6 +417,8 @@ export const AdminDashboardPage: React.FC = () => {
                   ? 'bg-blue-50 text-blue-700 border-blue-200'
                   : 'bg-amber-50 text-amber-700 border-amber-200';
 
+                const itemClaims = claims.filter(c => c.itemId === item.id || c.itemId === item.referenceNumber);
+
                 return (
                   <div
                     key={item.id}
@@ -496,19 +498,42 @@ export const AdminDashboardPage: React.FC = () => {
                         <span>Public View</span>
                       </Link>
 
-                      {item.status !== 'resolved' && (
-                        <button
-                          onClick={() => updateItemStatus(item.id, 'resolved')}
-                          className="px-3.5 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-700 font-bold text-xs transition-colors flex items-center gap-1.5 cursor-pointer"
-                        >
-                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                          <span>Mark Resolved</span>
-                        </button>
-                      )}
+                        {itemClaims.length > 0 ? (
+                          <button
+                            onClick={() => {
+                              setActiveTab('claims');
+                              setSearchTerm(item.referenceNumber);
+                            }}
+                            className="px-3.5 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-800 font-bold text-xs transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
+                          >
+                            <ShieldAlert className="w-3.5 h-3.5 text-amber-600" />
+                            <span>{itemClaims.length} Claim{itemClaims.length > 1 ? 's' : ''} to Review</span>
+                          </button>
+                        ) : (
+                          <span className="text-[11px] text-slate-400 italic">No claims yet</span>
+                        )}
+
+                        {item.status !== 'resolved' ? (
+                          <button
+                            onClick={() => updateItemStatus(item.id, 'resolved')}
+                            className="px-3.5 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-700 font-bold text-xs transition-colors flex items-center gap-1.5 cursor-pointer"
+                          >
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                            <span>Mark Resolved</span>
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => updateItemStatus(item.id, 'open')}
+                            className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 font-bold text-xs transition-colors flex items-center gap-1.5 cursor-pointer"
+                          >
+                            <RefreshCcw className="w-3.5 h-3.5 text-slate-600" />
+                            <span>Reopen Item</span>
+                          </button>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                );
-              })
+                  );
+                })
             ) : (
               <div className="text-center py-16 bg-white rounded-2xl border border-slate-200">
                 <Inbox className="w-12 h-12 text-slate-300 mx-auto mb-3" />

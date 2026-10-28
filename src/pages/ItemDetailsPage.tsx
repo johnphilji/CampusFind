@@ -26,9 +26,13 @@ import { VerificationMethod } from '../types';
 export const ItemDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { items, submitClaim, user } = useApp();
+  const { items, claims, submitClaim, user, isAuthenticated } = useApp();
 
   const item = items.find(i => i.id === id);
+
+  // Check if current user or another student has already filed a claim or if item is already claimed
+  const existingUserClaim = claims.find(c => (c.itemId === id || c.itemId === item?.id) && (c.claimantId === user.id || c.claimantEmail === user.email));
+  const hasApprovedClaim = claims.some(c => (c.itemId === id || c.itemId === item?.id) && (c.status === 'Approved' || c.status === 'Item Returned'));
 
   // Claim modal state
   const [isClaimModalOpen, setIsClaimModalOpen] = useState(false);
@@ -236,6 +240,32 @@ export const ItemDetailsPage: React.FC = () => {
                 <CheckCircle2 className="w-5 h-5 text-emerald-600" />
                 <span>This item has been safely returned to its rightful owner.</span>
               </div>
+            ) : (item.status === 'claimed' || hasApprovedClaim) ? (
+              <div className="p-4 rounded-2xl bg-blue-50 text-blue-900 border border-blue-200 text-center space-y-1">
+                <div className="flex items-center justify-center gap-2 font-bold text-xs sm:text-sm text-[#1E73E8]">
+                  <ShieldCheck className="w-5 h-5" />
+                  <span>Ownership Verified & Handover in Progress</span>
+                </div>
+                <p className="text-xs text-slate-600">
+                  This item has already been claimed and approved by the campus verification desk. Further claims cannot be accepted.
+                </p>
+              </div>
+            ) : existingUserClaim ? (
+              <div className="p-4 rounded-2xl bg-amber-50 text-amber-900 border border-amber-200 flex flex-col sm:flex-row items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5">
+                  <Clock className="w-5 h-5 text-amber-600 flex-shrink-0" />
+                  <div>
+                    <span className="font-bold text-xs sm:text-sm block">Claim Under Review ({existingUserClaim.id})</span>
+                    <span className="text-xs text-amber-700">You have already submitted an active ownership claim for this item.</span>
+                  </div>
+                </div>
+                <Link
+                  to="/dashboard"
+                  className="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold shadow-xs whitespace-nowrap"
+                >
+                  Track in Dashboard
+                </Link>
+              </div>
             ) : item.type === 'found' ? (
               <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-gradient-to-r from-[#E8EEFF]/80 to-white p-4 rounded-2xl border border-[#3559C7]/20">
                 <div>
@@ -245,10 +275,16 @@ export const ItemDetailsPage: React.FC = () => {
                   </p>
                 </div>
                 <button
-                  onClick={() => setIsClaimModalOpen(true)}
-                  className="w-full sm:w-auto px-6 py-3 rounded-xl bg-[#243B8A] hover:bg-[#3559C7] text-white font-semibold text-xs sm:text-sm shadow-sm transition-all"
+                  onClick={() => {
+                    if (!isAuthenticated) {
+                      navigate('/login', { state: { from: { pathname: `/item/${item.id}` } } });
+                    } else {
+                      setIsClaimModalOpen(true);
+                    }
+                  }}
+                  className="w-full sm:w-auto px-6 py-3 rounded-xl bg-[#243B8A] hover:bg-[#3559C7] text-white font-semibold text-xs sm:text-sm shadow-sm transition-all cursor-pointer"
                 >
-                  Claim This Item
+                  {isAuthenticated ? 'Claim This Item' : 'Sign In to Claim Item'}
                 </button>
               </div>
             ) : (
