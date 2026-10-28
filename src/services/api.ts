@@ -1,4 +1,13 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
+export const API_BASE_URL = import.meta.env.VITE_API_URL || (window.location.hostname.includes('s3-website') ? 'http://43.205.113.108:5000/api' : '/api');
+
+export function getFullImageUrl(url?: string | null): string {
+  if (!url) return '';
+  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
+    return url;
+  }
+  const base = API_BASE_URL.endsWith('/api') ? API_BASE_URL.slice(0, -4) : API_BASE_URL;
+  return `${base}${url.startsWith('/') ? '' : '/'}${url}`;
+}
 
 class ApiClient {
   public getToken(): string | null {

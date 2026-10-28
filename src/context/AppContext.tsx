@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { CampusItem, AppNotification, ClaimRecord, MatchSuggestion } from '../types';
 import { INITIAL_ITEMS, INITIAL_NOTIFICATIONS, INITIAL_CLAIMS, INITIAL_MATCHES } from '../data/mockData';
-import { api } from '../services/api';
+import { api, getFullImageUrl } from '../services/api';
 
 export interface UserProfile {
   id?: string;
@@ -118,7 +118,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           date: r.report_date || r.reportDate || 'Recent',
           timeAgo: 'Recently updated',
           description: r.description,
-          imageUrl: r.image_url || r.imageUrl,
+          imageUrl: getFullImageUrl(r.image_url || r.imageUrl),
           status: r.status,
           identifyingQuestion: r.identifying_question || r.identifyingQuestion,
           reporterName: r.reporter_name || r.reporterName,
@@ -275,7 +275,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           date: r.report_date,
           timeAgo: 'Just now',
           description: r.description,
-          imageUrl: r.image_url,
+          imageUrl: getFullImageUrl(r.image_url),
           status: r.status,
           identifyingQuestion: r.identifying_question,
           reporterName: user?.name,
