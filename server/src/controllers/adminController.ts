@@ -25,6 +25,12 @@ export async function adminLogin(req: Request, res: Response): Promise<void> {
     );
 
     if (userRes.rows.length === 0) {
+      // Audit: log failed admin login attempt
+      pool.query(
+        `INSERT INTO audit_events (action, entity_type, entity_id, metadata, ip_address)
+         VALUES ('FAILED_ADMIN_LOGIN', 'auth', 'unknown', $1, $2)`,
+        [JSON.stringify({ attemptedEmail: email.toLowerCase().trim() }), req.ip || null]
+      ).catch(() => {});
       res.status(401).json({ error: 'Invalid admin credentials or unauthorized account.' });
       return;
     }
@@ -33,12 +39,23 @@ export async function adminLogin(req: Request, res: Response): Promise<void> {
 
     // Explicit role authorization check
     if (user.role !== 'admin' && user.role !== 'security_staff') {
+      pool.query(
+        `INSERT INTO audit_events (actor_id, action, entity_type, entity_id, metadata, ip_address)
+         VALUES ($1, 'FAILED_ADMIN_LOGIN', 'auth', $2, $3, $4)`,
+        [user.id, user.id, JSON.stringify({ reason: 'insufficient_role', role: user.role }), req.ip || null]
+      ).catch(() => {});
       res.status(403).json({ error: 'Access Denied: This portal is restricted to authorized Security & Admin staff only.' });
       return;
     }
 
     const match = await bcrypt.compare(password, user.password_hash);
     if (!match) {
+      // Audit: log failed password attempt with known actor
+      pool.query(
+        `INSERT INTO audit_events (actor_id, action, entity_type, entity_id, metadata, ip_address)
+         VALUES ($1, 'FAILED_ADMIN_LOGIN', 'auth', $2, $3, $4)`,
+        [user.id, user.id, JSON.stringify({ email: user.email, reason: 'wrong_password' }), req.ip || null]
+      ).catch(() => {});
       res.status(401).json({ error: 'Invalid admin credentials or master access key.' });
       return;
     }

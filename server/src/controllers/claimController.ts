@@ -129,6 +129,19 @@ export async function submitClaim(req: RequestWithUser, res: Response): Promise<
       [req.user.id, claimRes.rows[0].id, JSON.stringify({ claimReference, reportId, hasEvidenceImage: Boolean(evidenceImageUrl) })]
     );
 
+    // Suspicious activity: flag if the same item now has 3+ active claims
+    const activeClaimsRes = await client.query(
+      `SELECT COUNT(*) as cnt FROM claims WHERE report_id = $1 AND status NOT IN ('Rejected')`,
+      [reportId]
+    );
+    if (parseInt(activeClaimsRes.rows[0].cnt, 10) >= 3) {
+      await client.query(
+        `INSERT INTO audit_events (actor_id, action, entity_type, entity_id, metadata)
+         VALUES ($1, 'SUSPICIOUS_CLAIM_ACTIVITY', 'report', $2, $3)`,
+        [req.user.id, reportId, JSON.stringify({ activeClaimCount: activeClaimsRes.rows[0].cnt, newClaimReference: claimReference })]
+      );
+    }
+
     await client.query('COMMIT');
 
     // Trigger AWS SQS Asynchronous event
@@ -316,6 +329,11 @@ export async function reviewClaim(req: RequestWithUser, res: Response): Promise<
       await client.query(
         `UPDATE reports SET status = 'resolved', updated_at = CURRENT_TIMESTAMP WHERE id = $1`,
         [claim.report_id]
+      );
+      // Record the handover timestamp — starts the 7-day retention countdown
+      await client.query(
+        `UPDATE claims SET returned_at = CURRENT_TIMESTAMP WHERE id = $1`,
+        [claim.id]
       );
     }
 

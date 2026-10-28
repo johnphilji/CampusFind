@@ -30,8 +30,9 @@ export async function register(req: Request, res: Response): Promise<void> {
     const saltRounds = 10;
     const passwordHash = await bcrypt.hash(password, saltRounds);
 
-    // Explicit default: registrations cannot self-assign 'admin' unless verified
-    const assignedRole = role === 'admin' ? 'admin' : 'student';
+    // SECURITY: Always assign 'student' — clients cannot self-elevate to admin.
+    // Admin accounts must be created via seed scripts or database directly.
+    const assignedRole: 'student' = 'student';
 
     const insertRes = await pool.query(
       `INSERT INTO users (email, password_hash, full_name, student_id, department, role, avatar_url)
@@ -100,6 +101,12 @@ export async function login(req: Request, res: Response): Promise<void> {
     );
 
     if (userRes.rows.length === 0) {
+      // Audit: log failed attempt without revealing whether the account exists
+      pool.query(
+        `INSERT INTO audit_events (action, entity_type, entity_id, metadata, ip_address)
+         VALUES ('FAILED_LOGIN', 'auth', 'unknown', $1, $2)`,
+        [JSON.stringify({ attemptedEmail: email.toLowerCase().trim() }), req.ip || null]
+      ).catch(() => {});
       res.status(401).json({ error: 'Invalid college email or password.' });
       return;
     }
@@ -108,6 +115,12 @@ export async function login(req: Request, res: Response): Promise<void> {
     const match = await bcrypt.compare(password, user.password_hash);
 
     if (!match) {
+      // Audit: log failed login with actor id
+      pool.query(
+        `INSERT INTO audit_events (actor_id, action, entity_type, entity_id, metadata, ip_address)
+         VALUES ($1, 'FAILED_LOGIN', 'auth', $2, $3, $4)`,
+        [user.id, user.id, JSON.stringify({ email: user.email }), req.ip || null]
+      ).catch(() => {});
       res.status(401).json({ error: 'Invalid college email or password.' });
       return;
     }

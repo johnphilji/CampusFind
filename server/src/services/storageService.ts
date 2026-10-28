@@ -21,15 +21,27 @@ const s3Client = new S3Client({
     : {}),
 });
 
+/** Allowed image MIME types for upload */
+const ALLOWED_IMAGE_TYPES = new Set([
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/gif',
+]);
+
 /**
  * Generates an S3 presigned PUT URL for direct, secure file upload from frontend
- * Validates content-type and keeps private evidence secure
+ * Validates content-type against an allowlist and keeps private evidence secure
  */
 export async function generatePresignedUploadUrl(
   filename: string,
   contentType: string,
   isPrivateEvidence: boolean = false
 ): Promise<PresignedUploadResponse> {
+  // SECURITY: Reject disallowed file types before doing anything else
+  if (!ALLOWED_IMAGE_TYPES.has(contentType.toLowerCase())) {
+    throw new Error(`File type '${contentType}' is not allowed. Accepted types: jpeg, png, webp, gif.`);
+  }
   const sanitizedFilename = filename.replace(/[^a-zA-Z0-9.-]/g, '_');
   const folder = isPrivateEvidence ? 'evidence' : 'items';
   const uniqueKey = `${folder}/${Date.now()}-${sanitizedFilename}`;

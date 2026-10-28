@@ -9,6 +9,7 @@
     "start": "node dist/index.js",
     "dev": "tsx watch src/index.ts",
     "db:setup": "tsx src/db/setup.ts",
+    "db:migrate": "tsx src/db/runMigration.ts",
     "db:seed": "tsx src/db/seed.ts"
   },
   "dependencies": {
@@ -22,6 +23,7 @@
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
+    "express-rate-limit": "^8.7.1",
     "jsonwebtoken": "^9.0.2",
     "nodemailer": "^10.2.1",
     "pg": "^8.13.1"
