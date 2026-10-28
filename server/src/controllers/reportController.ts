@@ -1,6 +1,7 @@
 import { Response } from 'express';
 import { pool } from '../db/index.js';
 import { RequestWithUser } from '../middleware/auth.js';
+import { broadcastNewItemNotification } from '../services/emailNotificationService.js';
 
 export async function getReports(req: RequestWithUser, res: Response): Promise<void> {
   const { type, category, location, search, status, page = '1', limit = '20' } = req.query;
@@ -179,6 +180,21 @@ export async function createReport(req: RequestWithUser, res: Response): Promise
        VALUES ($1, 'CREATE_REPORT', 'report', $2, $3)`,
       [req.user.id, report.id, JSON.stringify({ referenceNumber, type, title })]
     );
+
+    // Asynchronously broadcast notification to all valid registered user emails and publish to AWS SNS
+    broadcastNewItemNotification({
+      id: report.id,
+      reference_number: report.reference_number,
+      title: report.title,
+      type: report.type,
+      category: report.category,
+      location: report.location,
+      description: report.description,
+      report_date: report.report_date,
+      image_url: report.image_url,
+    }).catch(broadcastErr => {
+      console.warn('[Notification Engine Warning]:', broadcastErr);
+    });
 
     res.status(201).json({
       message: 'Report published successfully.',

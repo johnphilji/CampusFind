@@ -44,9 +44,10 @@ export async function generatePresignedUploadUrl(
       });
 
       const uploadUrl = await getSignedUrl(s3Client, command, { expiresIn: 900 });
+      // Point to our secure backend proxy route which streams from private S3 bucket
       const publicUrl = isPrivateEvidence
         ? '' // Private evidence is never exposed via public URL
-        : `https://${config.aws.bucketName}.s3.${config.aws.region}.amazonaws.com/${uniqueKey}`;
+        : `/api/images/${uniqueKey}`;
 
       return {
         uploadUrl,
@@ -67,6 +68,20 @@ export async function generatePresignedUploadUrl(
 }
 
 /**
+ * Streams S3 object directly to response
+ */
+export async function getObjectStream(key: string) {
+  if (!config.aws.bucketName) {
+    throw new Error('S3 bucket not configured');
+  }
+  const command = new GetObjectCommand({
+    Bucket: config.aws.bucketName,
+    Key: key,
+  });
+  return await s3Client.send(command);
+}
+
+/**
  * Generate temporary presigned download URL for authorized admin viewing of private evidence
  */
 export async function getPresignedEvidenceDownloadUrl(key: string): Promise<string> {
@@ -82,3 +97,4 @@ export async function getPresignedEvidenceDownloadUrl(key: string): Promise<stri
     return '';
   }
 }
+

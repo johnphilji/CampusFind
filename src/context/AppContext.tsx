@@ -155,6 +155,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           setClaims(mappedClaims);
           localStorage.setItem('cf_claims', JSON.stringify(mappedClaims));
         }
+
+        // Fetch notifications from backend
+        const notifRes = await api.getNotifications().catch(() => null);
+        if (notifRes?.notifications && notifRes.notifications.length > 0) {
+          const mappedNotifs: AppNotification[] = notifRes.notifications.map((n: any) => ({
+            id: n.id,
+            title: n.title,
+            message: n.message,
+            timestamp: new Date(n.createdAt).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
+            read: n.read,
+            type: (['match', 'claim', 'system', 'report', 'message'].includes(n.type) ? n.type : 'system') as any,
+            targetId: n.reportId
+          }));
+          setNotifications(mappedNotifs);
+          localStorage.setItem('cf_notifications', JSON.stringify(mappedNotifs));
+        }
       }
     } catch (err) {
       console.warn('Backend sync warning (using cached data):', err);
@@ -376,10 +392,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const markNotificationRead = (id: string) => {
     setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+    if (api.getToken()) {
+      api.markNotificationRead(id).catch(() => null);
+    }
   };
 
   const markAllNotificationsRead = () => {
     setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    if (api.getToken()) {
+      api.markAllNotificationsRead().catch(() => null);
+    }
   };
 
   const unreadCount = notifications.filter(n => !n.read).length;

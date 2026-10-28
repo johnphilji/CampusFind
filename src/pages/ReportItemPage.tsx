@@ -21,6 +21,7 @@ import {
 import { useApp } from '../context/AppContext';
 import { ItemCategory, ItemType, SecurityLevel, CustodyLocation } from '../types';
 import { CAMPUS_CATEGORIES, CAMPUS_LOCATIONS } from '../data/mockData';
+import { api } from '../services/api';
 
 export const ReportItemPage: React.FC = () => {
   const { addItem, user } = useApp();
@@ -45,6 +46,7 @@ export const ReportItemPage: React.FC = () => {
   const [identifyingQuestion, setIdentifyingQuestion] = useState('');
   const [securityLevel, setSecurityLevel] = useState<SecurityLevel>('standard');
   const [custodyLocation, setCustodyLocation] = useState<CustodyLocation>('Central Library Desk');
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [createdRef, setCreatedRef] = useState<string | null>(null);
@@ -54,10 +56,11 @@ export const ReportItemPage: React.FC = () => {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        alert('Image must be under 5MB');
+      if (file.size > 10 * 1024 * 1024) {
+        alert('Image must be under 10MB');
         return;
       }
+      setSelectedFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result as string);
@@ -87,11 +90,34 @@ export const ReportItemPage: React.FC = () => {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    setTimeout(async () => {
+    try {
+      let finalImageUrl = imagePreview;
+
+      // Direct S3 Upload via Presigned URL
+      if (selectedFile && api.getToken()) {
+        try {
+          const presignRes = await api.getPresignedUpload(selectedFile.name, selectedFile.type || 'image/jpeg', false);
+          if (presignRes && presignRes.uploadUrl) {
+            const putRes = await fetch(presignRes.uploadUrl, {
+              method: 'PUT',
+              headers: {
+                'Content-Type': selectedFile.type || 'image/jpeg',
+              },
+              body: selectedFile,
+            });
+            if (putRes.ok) {
+              finalImageUrl = presignRes.publicUrl;
+            }
+          }
+        } catch (uploadErr) {
+          console.warn('S3 direct upload fell back:', uploadErr);
+        }
+      }
+
       const finalLocation = location === 'Other Campus Area' && customLocation ? customLocation : location;
       const created = await addItem({
         title,
@@ -101,7 +127,7 @@ export const ReportItemPage: React.FC = () => {
         date,
         reportedTime,
         description,
-        imageUrl: imagePreview,
+        imageUrl: finalImageUrl,
         reporterName: user.name || 'Anonymous Student',
         reporterDepartment: user.department || 'Campus Department',
         identifyingQuestion: reportType === 'found' ? identifyingQuestion : undefined,
@@ -111,8 +137,11 @@ export const ReportItemPage: React.FC = () => {
 
       setCreatedRef(created.referenceNumber);
       setCreatedId(created.id);
+    } catch (err) {
+      console.error('Failed to submit report:', err);
+    } finally {
       setIsSubmitting(false);
-    }, 700);
+    }
   };
 
   // SUCCESS STATE SCREEN

@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import { pool } from '../db/index.js';
 import { config } from '../config/index.js';
 import { RequestWithUser } from '../middleware/auth.js';
+import { subscribeEmailToSnsAlerts } from '../services/emailNotificationService.js';
 
 export async function register(req: Request, res: Response): Promise<void> {
   const { email, password, fullName, studentId, department, role } = req.body;
@@ -60,6 +61,9 @@ export async function register(req: Request, res: Response): Promise<void> {
       config.jwtSecret,
       { expiresIn: config.jwtExpiresIn as any }
     );
+
+    // Register email with AWS SNS Item Alerts Topic (reflected in AWS Console)
+    subscribeEmailToSnsAlerts(user.email).catch(e => console.warn('SNS auto-subscribe notice:', e));
 
     res.status(201).json({
       message: 'Account created successfully.',
@@ -119,6 +123,9 @@ export async function login(req: Request, res: Response): Promise<void> {
       config.jwtSecret,
       { expiresIn: config.jwtExpiresIn as any }
     );
+
+    // Auto-subscribe user's email to AWS SNS Item Alerts Topic if valid
+    subscribeEmailToSnsAlerts(user.email).catch(e => console.warn('SNS auto-subscribe notice:', e));
 
     res.json({
       message: 'Authentication successful.',

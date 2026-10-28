@@ -115,6 +115,23 @@ class ApiClient {
     });
   }
 
+  // --- Notification endpoints ---
+  public getNotifications() {
+    return this.request<{ notifications: any[] }>('/notifications');
+  }
+
+  public markNotificationRead(id: string) {
+    return this.request<{ success: boolean }>(`/notifications/${id}/read`, {
+      method: 'PATCH',
+    });
+  }
+
+  public markAllNotificationsRead() {
+    return this.request<{ success: boolean }>('/notifications/read-all', {
+      method: 'PATCH',
+    });
+  }
+
   // --- S3 Presign endpoint ---
   public getPresignedUpload(filename: string, contentType: string, isPrivateEvidence: boolean = false) {
     return this.request<{ uploadUrl: string; publicUrl: string; key: string }>('/upload/presign', {
