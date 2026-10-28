@@ -107,7 +107,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
       // Fetch reports from backend
       const repRes = await api.getReports();
-      if (repRes?.data && repRes.data.length > 0) {
+      if (repRes?.data) {
         const mappedItems: CampusItem[] = repRes.data.map((r: any) => ({
           id: r.id,
           referenceNumber: r.reference_number || r.referenceNumber,

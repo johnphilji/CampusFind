@@ -28,7 +28,10 @@ import {
   Image as ImageIcon,
   Check,
   FileCheck2,
-  AlertCircle
+  AlertCircle,
+  Package,
+  Layers,
+  Inbox
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { ItemStatus } from '../types';
@@ -55,6 +58,7 @@ export const AdminDashboardPage: React.FC = () => {
   const navigate = useNavigate();
 
   // States
+  const [activeTab, setActiveTab] = useState<'claims' | 'items'>('items');
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [expandedClaimId, setExpandedClaimId] = useState<string | null>(null);
@@ -113,6 +117,22 @@ export const AdminDashboardPage: React.FC = () => {
     });
   }, [enrichedClaims, searchTerm, statusFilter]);
 
+  // Filtered Reported Items
+  const filteredItems = useMemo(() => {
+    return items.filter(item => {
+      const matchesSearch = !searchTerm ||
+        item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.referenceNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (item.reporterName && item.reporterName.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (item.description && item.description.toLowerCase().includes(searchTerm.toLowerCase()));
+
+      const matchesStatus = statusFilter === 'all' || item.status === statusFilter;
+      return matchesSearch && matchesStatus;
+    });
+  }, [items, searchTerm, statusFilter]);
+
   // Action handlers
   const handleApprove = async (claimId: string, itemId: string) => {
     const note = adminNote.trim() || 'Verified by Admin: physical characteristics and proof confirmed match.';
@@ -138,6 +158,10 @@ export const AdminDashboardPage: React.FC = () => {
   const approvedCount = enrichedClaims.filter(c => c.status === 'Approved').length;
   const returnedCount = enrichedClaims.filter(c => c.status === 'Item Returned').length;
   const rejectedCount = enrichedClaims.filter(c => c.status === 'Rejected').length;
+
+  const openItemsCount = items.filter(i => i.status === 'open').length;
+  const inProgressCount = items.filter(i => i.status === 'under_review' || i.status === 'claimed').length;
+  const resolvedItemsCount = items.filter(i => i.status === 'resolved').length;
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] text-slate-800 flex flex-col font-sans selection:bg-[#1E73E8] selection:text-white">
@@ -205,75 +229,159 @@ export const AdminDashboardPage: React.FC = () => {
       {/* ─── 2. MAIN SINGLE PAGE CONTENT ─── */}
       <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 py-6 sm:py-8 space-y-6">
         
+        {/* Navigation Tabs (Reported Items vs Ownership Claims) */}
+        <div className="flex items-center gap-2 p-1.5 bg-slate-200/70 rounded-2xl w-fit">
+          <button
+            onClick={() => { setActiveTab('items'); setStatusFilter('all'); setSearchTerm(''); }}
+            className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-2 cursor-pointer ${
+              activeTab === 'items'
+                ? 'bg-white text-slate-900 shadow-sm'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <Package className="w-4 h-4 text-[#1E73E8]" />
+            <span>All Reported Items</span>
+            <span className={`text-[11px] px-2 py-0.5 rounded-full ${activeTab === 'items' ? 'bg-blue-100 text-[#1E73E8]' : 'bg-slate-300 text-slate-700'}`}>
+              {items.length}
+            </span>
+          </button>
+          <button
+            onClick={() => { setActiveTab('claims'); setStatusFilter('all'); setSearchTerm(''); }}
+            className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-2 cursor-pointer ${
+              activeTab === 'claims'
+                ? 'bg-white text-slate-900 shadow-sm'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <FileCheck2 className="w-4 h-4 text-emerald-600" />
+            <span>Ownership Claims</span>
+            <span className={`text-[11px] px-2 py-0.5 rounded-full ${activeTab === 'claims' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-300 text-slate-700'}`}>
+              {claims.length}
+            </span>
+          </button>
+        </div>
+
         {/* Header Title + Stats Row */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
-              Item Claims Verification
+              {activeTab === 'items' ? 'Campus Reported Items' : 'Item Claims Verification'}
               <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
-                {filteredClaims.length} records
+                {activeTab === 'items' ? filteredItems.length : filteredClaims.length} records
               </span>
             </h1>
             <p className="text-xs sm:text-sm text-slate-500 mt-1">
-              Verify submitted proof, inspect item photos, and manage lost/found item claim authorization.
+              {activeTab === 'items'
+                ? 'View, search, and manage all lost & found items reported by campus students and staff.'
+                : 'Verify submitted proof, inspect item photos, and manage lost/found item claim authorization.'}
             </p>
           </div>
 
           {/* Quick Filter Badges */}
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
-            <button
-              onClick={() => setStatusFilter('all')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-colors ${
-                statusFilter === 'all'
-                  ? 'bg-[#1E73E8] text-white shadow-xs'
-                  : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-200'
-              }`}
-            >
-              All ({enrichedClaims.length})
-            </button>
-            <button
-              onClick={() => setStatusFilter('Submitted')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-colors flex items-center gap-1.5 ${
-                statusFilter === 'Submitted'
-                  ? 'bg-amber-500 text-white shadow-xs'
-                  : 'bg-white hover:bg-slate-100 text-amber-700 border border-slate-200'
-              }`}
-            >
-              <Clock className="w-3 h-3" />
-              Pending ({pendingCount})
-            </button>
-            <button
-              onClick={() => setStatusFilter('Approved')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-colors flex items-center gap-1.5 ${
-                statusFilter === 'Approved'
-                  ? 'bg-blue-600 text-white shadow-xs'
-                  : 'bg-white hover:bg-slate-100 text-blue-700 border border-slate-200'
-              }`}
-            >
-              <Check className="w-3 h-3" />
-              Approved ({approvedCount})
-            </button>
-            <button
-              onClick={() => setStatusFilter('Item Returned')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-colors flex items-center gap-1.5 ${
-                statusFilter === 'Item Returned'
-                  ? 'bg-emerald-600 text-white shadow-xs'
-                  : 'bg-white hover:bg-slate-100 text-emerald-700 border border-slate-200'
-              }`}
-            >
-              <CheckCircle2 className="w-3 h-3" />
-              Returned ({returnedCount})
-            </button>
-            <button
-              onClick={() => setStatusFilter('Rejected')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-colors ${
-                statusFilter === 'Rejected'
-                  ? 'bg-rose-600 text-white shadow-xs'
-                  : 'bg-white hover:bg-slate-100 text-rose-700 border border-slate-200'
-              }`}
-            >
-              Rejected ({rejectedCount})
-            </button>
+            {activeTab === 'items' ? (
+              <>
+                <button
+                  onClick={() => setStatusFilter('all')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-colors ${
+                    statusFilter === 'all'
+                      ? 'bg-[#1E73E8] text-white shadow-xs'
+                      : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-200'
+                  }`}
+                >
+                  All ({items.length})
+                </button>
+                <button
+                  onClick={() => setStatusFilter('open')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-colors flex items-center gap-1.5 ${
+                    statusFilter === 'open'
+                      ? 'bg-emerald-600 text-white shadow-xs'
+                      : 'bg-white hover:bg-slate-100 text-emerald-700 border border-slate-200'
+                  }`}
+                >
+                  <CheckCircle2 className="w-3 h-3" />
+                  Open ({openItemsCount})
+                </button>
+                <button
+                  onClick={() => setStatusFilter('under_review')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-colors flex items-center gap-1.5 ${
+                    statusFilter === 'under_review'
+                      ? 'bg-amber-500 text-white shadow-xs'
+                      : 'bg-white hover:bg-slate-100 text-amber-700 border border-slate-200'
+                  }`}
+                >
+                  <Clock className="w-3 h-3" />
+                  Under Review ({inProgressCount})
+                </button>
+                <button
+                  onClick={() => setStatusFilter('resolved')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-colors flex items-center gap-1.5 ${
+                    statusFilter === 'resolved'
+                      ? 'bg-blue-600 text-white shadow-xs'
+                      : 'bg-white hover:bg-slate-100 text-blue-700 border border-slate-200'
+                  }`}
+                >
+                  <Check className="w-3 h-3" />
+                  Resolved ({resolvedItemsCount})
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={() => setStatusFilter('all')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-colors ${
+                    statusFilter === 'all'
+                      ? 'bg-[#1E73E8] text-white shadow-xs'
+                      : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-200'
+                  }`}
+                >
+                  All ({enrichedClaims.length})
+                </button>
+                <button
+                  onClick={() => setStatusFilter('Submitted')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-colors flex items-center gap-1.5 ${
+                    statusFilter === 'Submitted'
+                      ? 'bg-amber-500 text-white shadow-xs'
+                      : 'bg-white hover:bg-slate-100 text-amber-700 border border-slate-200'
+                  }`}
+                >
+                  <Clock className="w-3 h-3" />
+                  Pending ({pendingCount})
+                </button>
+                <button
+                  onClick={() => setStatusFilter('Approved')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-colors flex items-center gap-1.5 ${
+                    statusFilter === 'Approved'
+                      ? 'bg-blue-600 text-white shadow-xs'
+                      : 'bg-white hover:bg-slate-100 text-blue-700 border border-slate-200'
+                  }`}
+                >
+                  <Check className="w-3 h-3" />
+                  Approved ({approvedCount})
+                </button>
+                <button
+                  onClick={() => setStatusFilter('Item Returned')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-colors flex items-center gap-1.5 ${
+                    statusFilter === 'Item Returned'
+                      ? 'bg-emerald-600 text-white shadow-xs'
+                      : 'bg-white hover:bg-slate-100 text-emerald-700 border border-slate-200'
+                  }`}
+                >
+                  <CheckCircle2 className="w-3 h-3" />
+                  Returned ({returnedCount})
+                </button>
+                <button
+                  onClick={() => setStatusFilter('Rejected')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-colors ${
+                    statusFilter === 'Rejected'
+                      ? 'bg-rose-600 text-white shadow-xs'
+                      : 'bg-white hover:bg-slate-100 text-rose-700 border border-slate-200'
+                  }`}
+                >
+                  Rejected ({rejectedCount})
+                </button>
+              </>
+            )}
           </div>
         </div>
 
@@ -297,10 +405,124 @@ export const AdminDashboardPage: React.FC = () => {
           )}
         </div>
 
-        {/* ─── 3. CLAIMS LIST CARDS ─── */}
-        <div className="space-y-4">
-          {filteredClaims.length > 0 ? (
-            filteredClaims.map((claim) => {
+        {/* ─── 3. CONTENT AREA: REPORTED ITEMS OR CLAIMS LIST ─── */}
+        {activeTab === 'items' ? (
+          <div className="space-y-4">
+            {filteredItems.length > 0 ? (
+              filteredItems.map((item) => {
+                const isFound = item.type === 'found';
+                const statusBadgeBg = item.status === 'open'
+                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                  : item.status === 'resolved'
+                  ? 'bg-blue-50 text-blue-700 border-blue-200'
+                  : 'bg-amber-50 text-amber-700 border-amber-200';
+
+                return (
+                  <div
+                    key={item.id}
+                    className="rounded-2xl border border-slate-200 bg-white hover:border-slate-300 shadow-2xs hover:shadow-xs p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-all"
+                  >
+                    {/* Left: Thumbnail & Item Info */}
+                    <div className="flex items-start sm:items-center gap-3.5 flex-1 min-w-0">
+                      {/* Item Thumbnail */}
+                      <div className="relative group/thumb flex-shrink-0">
+                        <img
+                          src={item.imageUrl || 'https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=600&q=80'}
+                          alt={item.title}
+                          className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl object-cover border border-slate-200"
+                        />
+                        {item.imageUrl && (
+                          <button
+                            type="button"
+                            onClick={() => setActivePhotoModal(item.imageUrl)}
+                            className="absolute inset-0 bg-black/40 rounded-xl opacity-0 group-hover/thumb:opacity-100 flex items-center justify-center transition-opacity text-white"
+                            title="Enlarge Photo"
+                          >
+                            <ImageIcon className="w-5 h-5" />
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Item Details */}
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 flex-wrap mb-1">
+                          <span className="font-mono text-xs font-bold text-[#1E73E8] bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
+                            {item.referenceNumber}
+                          </span>
+                          <span className={`text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full ${
+                            isFound ? 'bg-teal-50 text-teal-700 border border-teal-200' : 'bg-rose-50 text-rose-700 border border-rose-200'
+                          }`}>
+                            {isFound ? 'Found' : 'Lost'}
+                          </span>
+                          <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${statusBadgeBg}`}>
+                            {item.status.replace('_', ' ').toUpperCase()}
+                          </span>
+                        </div>
+
+                        <h3 className="font-bold text-slate-900 text-sm sm:text-base leading-snug">
+                          {item.title}
+                        </h3>
+
+                        <p className="text-xs text-slate-600 line-clamp-2 mt-1">
+                          {item.description}
+                        </p>
+
+                        <div className="flex items-center gap-4 text-xs text-slate-500 mt-2 flex-wrap">
+                          <span className="flex items-center gap-1">
+                            <MapPin className="w-3.5 h-3.5 text-slate-400" />
+                            {item.location}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                            {item.date}
+                          </span>
+                          {item.reporterName && (
+                            <span className="flex items-center gap-1 text-slate-700 font-medium">
+                              <User className="w-3.5 h-3.5 text-slate-400" />
+                              Reported by {item.reporterName} {item.reporterDepartment ? `(${item.reporterDepartment})` : ''}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Right: Action Buttons */}
+                    <div className="flex sm:flex-col items-center sm:items-end gap-2 flex-shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100">
+                      <Link
+                        to={`/item/${item.id}`}
+                        className="px-3.5 py-2 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 font-bold text-xs transition-colors flex items-center gap-1.5"
+                      >
+                        <ExternalLink className="w-3.5 h-3.5" />
+                        <span>Public View</span>
+                      </Link>
+
+                      {item.status !== 'resolved' && (
+                        <button
+                          onClick={() => updateItemStatus(item.id, 'resolved')}
+                          className="px-3.5 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-700 font-bold text-xs transition-colors flex items-center gap-1.5 cursor-pointer"
+                        >
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                          <span>Mark Resolved</span>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <div className="text-center py-16 bg-white rounded-2xl border border-slate-200">
+                <Inbox className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+                <h3 className="text-base font-bold text-slate-700">No Reported Items Found</h3>
+                <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
+                  No items match the current keyword search or filter criteria.
+                </p>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {filteredClaims.length > 0 ? (
+              filteredClaims.map((claim) => {
               const isExpanded = expandedClaimId === claim.id;
 
               return (
@@ -598,6 +820,7 @@ export const AdminDashboardPage: React.FC = () => {
             </div>
           )}
         </div>
+        )}
 
       </main>
 
