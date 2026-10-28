@@ -64,21 +64,27 @@ export const ItemDetailsPage: React.FC = () => {
     .filter(i => i.id !== item.id && (i.category === item.category || i.location === item.location))
     .slice(0, 2);
 
-  const handleClaimSubmit = (e: React.FormEvent) => {
+  const [claimErrorMessage, setClaimErrorMessage] = useState<string | null>(null);
+
+  const handleClaimSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!proofDetails.trim()) return;
 
     setIsClaimSubmitting(true);
-    setTimeout(() => {
-      submitClaim(item.id, {
+    setClaimErrorMessage(null);
+    try {
+      await submitClaim(item.id, {
         name: claimantName,
         email: claimantEmail,
         studentId: claimantId,
-        proof: proofDetails
+        proof: `${verificationMethod}: ${proofDetails.trim()}`
       });
       setIsClaimSubmitting(false);
       setClaimSuccess(true);
-    }, 600);
+    } catch (err: any) {
+      setIsClaimSubmitting(false);
+      setClaimErrorMessage(err.message || 'Failed to submit claim. Please check details and try again.');
+    }
   };
 
   const handleShare = () => {
@@ -362,6 +368,13 @@ export const ItemDetailsPage: React.FC = () => {
                     ✕
                   </button>
                 </div>
+
+                {claimErrorMessage && (
+                  <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold flex items-center gap-2">
+                    <AlertTriangle className="w-4 h-4 flex-shrink-0 text-rose-600" />
+                    <span>{claimErrorMessage}</span>
+                  </div>
+                )}
 
                 <div className="space-y-3 text-xs">
                   <div>

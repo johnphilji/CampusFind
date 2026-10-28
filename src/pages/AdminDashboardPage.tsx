@@ -34,6 +34,7 @@ import {
   Inbox
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
+import { getFullImageUrl } from '../services/api';
 import { ItemStatus } from '../types';
 
 // Category icon helper
@@ -84,7 +85,8 @@ export const AdminDashboardPage: React.FC = () => {
   const enrichedClaims = useMemo(() => {
     return claims.map(claim => {
       const matchedItem = items.find(i => i.id === claim.itemId || i.referenceNumber === claim.itemId);
-      const imageUrl = claim.itemImageUrl || matchedItem?.imageUrl || 'https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=600&q=80';
+      const rawImage = claim.itemImageUrl || matchedItem?.imageUrl;
+      const imageUrl = getFullImageUrl(rawImage) || 'https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=600&q=80';
       const itemStatus: ItemStatus = claim.reportStatus || matchedItem?.status || 'under_review';
       const itemRef = claim.itemReferenceNumber || matchedItem?.referenceNumber || 'REF-LFS';
       const itemCategory = claim.itemCategory || matchedItem?.category || 'General';
@@ -572,6 +574,9 @@ export const AdminDashboardPage: React.FC = () => {
                         <img
                           src={claim.imageUrl}
                           alt={claim.itemTitle}
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=600&q=80';
+                          }}
                           className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl object-cover border border-slate-200"
                         />
                         <button
@@ -679,6 +684,9 @@ export const AdminDashboardPage: React.FC = () => {
                             <img
                               src={claim.imageUrl}
                               alt={claim.itemTitle}
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=600&q=80';
+                              }}
                               className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                             />
                             <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3">

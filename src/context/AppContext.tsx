@@ -145,7 +145,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             itemType: c.item_type || 'found',
             itemLocation: c.item_location || 'Campus',
             itemCategory: c.item_category,
-            itemImageUrl: c.item_image_url,
+            itemImageUrl: getFullImageUrl(c.item_image_url),
             itemReferenceNumber: c.item_reference_number,
             itemDescription: c.item_description,
             reportStatus: c.report_status,
@@ -352,26 +352,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           proofDetails: details.proof
         };
       } else {
-        throw new Error('Not authenticated');
+        throw new Error('Authentication required. Please sign in to submit a claim.');
       }
     } catch (err: any) {
-      if (err.message && err.message.includes('already have an active claim')) {
-        throw err;
-      }
-      const claimRef = `CLM-${Math.floor(1000 + Math.random() * 9000)}`;
-      newClaim = {
-        id: claimRef,
-        itemId,
-        claimantId: user.id || 'claimant-1',
-        claimantName: details.name,
-        claimantEmail: details.email,
-        itemTitle: targetItem ? targetItem.title : 'Campus Item',
-        itemType: targetItem ? targetItem.type : 'found',
-        itemLocation: targetItem ? targetItem.location : 'Campus',
-        submittedAt: new Date().toLocaleDateString(),
-        status: 'Submitted',
-        proofDetails: details.proof
-      };
+      console.error('submitClaim error:', err);
+      throw err;
     }
 
     setClaims(prev => [newClaim, ...prev]);
