@@ -118,6 +118,10 @@ export const ReportItemPage: React.FC = () => {
         }
       }
 
+      if (!finalImageUrl) {
+        finalImageUrl = 'https://images.unsplash.com/photo-1584438784894-089d6a62b8fa?auto=format&fit=crop&w=600&q=80';
+      }
+
       const finalLocation = customLocation.trim()
         ? `${location} (${customLocation.trim()})`
         : location;
@@ -463,11 +467,33 @@ export const ReportItemPage: React.FC = () => {
         {currentStep === 2 && (
           <div className="space-y-4 animate-in fade-in duration-150">
             <div>
-              <h2 className="text-base sm:text-lg font-bold text-slate-900">Photograph of Item</h2>
-              <p className="text-xs text-slate-500">
-                Capture live with your mobile camera or upload from your gallery.
+              <div className="flex items-center gap-2">
+                <h2 className="text-base sm:text-lg font-bold text-slate-900">Photograph of Item</h2>
+                {reportType === 'lost' && (
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
+                    Optional
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-slate-500 mt-0.5">
+                {reportType === 'lost'
+                  ? "Optional for lost items — if you don't have a photo, you can skip this step."
+                  : "Capture live with your mobile camera or upload from your gallery."}
               </p>
             </div>
+
+            {reportType === 'lost' && !imagePreview && (
+              <div className="p-3 bg-blue-50/70 border border-blue-200/60 rounded-xl text-xs text-blue-900 flex items-center justify-between gap-3">
+                <span>No photo of your lost item? That's completely okay!</span>
+                <button
+                  type="button"
+                  onClick={() => setCurrentStep(3)}
+                  className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs whitespace-nowrap"
+                >
+                  Skip Step
+                </button>
+              </div>
+            )}
 
             {/* Image Preview / Capture Box */}
             <div className="relative rounded-2xl overflow-hidden border-2 border-dashed border-blue-400/40 bg-slate-50 p-4 text-center">

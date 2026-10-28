@@ -15,7 +15,11 @@ import {
   ChevronRight,
   AlertTriangle,
   Building2,
-  FileCheck
+  FileCheck,
+  Camera,
+  Upload,
+  Send,
+  X
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { StatusBadge, TypeBadge, SecurityBadge } from '../components/cards/Badges';
@@ -26,7 +30,7 @@ import { VerificationMethod } from '../types';
 export const ItemDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { items, claims, submitClaim, user, isAuthenticated } = useApp();
+  const { items, claims, submitClaim, reportSighting, user, isAuthenticated } = useApp();
 
   const item = items.find(i => i.id === id);
 
@@ -50,6 +54,14 @@ export const ItemDetailsPage: React.FC = () => {
   const [isClaimSubmitting, setIsClaimSubmitting] = useState(false);
   const [claimSuccess, setClaimSuccess] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
+
+  // Sighting / Ping modal state for lost items
+  const [isSightingModalOpen, setIsSightingModalOpen] = useState(false);
+  const [sightingLocation, setSightingLocation] = useState('');
+  const [sightingNote, setSightingNote] = useState('');
+  const [sightingImage, setSightingImage] = useState('');
+  const [isSightingSubmitting, setIsSightingSubmitting] = useState(false);
+  const [sightingSuccess, setSightingSuccess] = useState(false);
 
   if (!item) {
     return (
@@ -312,17 +324,25 @@ export const ItemDetailsPage: React.FC = () => {
             ) : (
               <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-gradient-to-r from-rose-50/80 to-white p-4 rounded-2xl border border-rose-200">
                 <div>
-                  <h4 className="font-bold text-sm text-[#D64545]">Found this lost item?</h4>
+                  <h4 className="font-bold text-sm text-[#D64545]">Spotted or Found this lost item?</h4>
                   <p className="text-xs text-[#70798B]">
-                    Report a finding or deposit it at the campus reception / security block.
+                    Ping the owner directly with the exact room or desk where it's located.
                   </p>
                 </div>
-                <Link
-                  to={`/report?type=found&title=Found:+${encodeURIComponent(item.title)}`}
-                  className="w-full sm:w-auto px-6 py-3 rounded-xl bg-[#243B8A] hover:bg-[#3559C7] text-white font-semibold text-xs sm:text-sm shadow-sm transition-all text-center"
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!isAuthenticated) {
+                      navigate('/login', { state: { from: { pathname: `/item/${item.id}` } } });
+                    } else {
+                      setIsSightingModalOpen(true);
+                    }
+                  }}
+                  className="w-full sm:w-auto px-6 py-3 rounded-xl bg-[#D64545] hover:bg-[#b83838] text-white font-semibold text-xs sm:text-sm shadow-sm transition-all text-center cursor-pointer flex items-center justify-center gap-1.5"
                 >
-                  I Found This Item
-                </Link>
+                  <MapPin className="w-4 h-4" />
+                  <span>I Spotted / Found It Here</span>
+                </button>
               </div>
             )}
           </div>
@@ -469,6 +489,170 @@ export const ItemDetailsPage: React.FC = () => {
                     className="flex-1 py-2.5 rounded-xl bg-[#1E3A8A] hover:bg-blue-800 text-white text-xs font-semibold disabled:opacity-50 shadow-sm"
                   >
                     {isClaimSubmitting ? 'Verifying...' : 'Submit Claim'}
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* SIGHTING / PING OWNER MODAL */}
+      {isSightingModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="bg-white w-full max-w-lg rounded-3xl p-6 sm:p-7 shadow-2xl border border-slate-100 space-y-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-rose-100 text-[#D64545] flex items-center justify-center">
+                  <MapPin className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-sm sm:text-base text-slate-900">Ping Owner: Item Spotted / Found</h3>
+                  <p className="text-[11px] text-slate-500">The person who lost "{item.title}" will get an instant alert</p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setIsSightingModalOpen(false);
+                  setSightingSuccess(false);
+                }}
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {sightingSuccess ? (
+              <div className="py-6 text-center space-y-3">
+                <div className="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto">
+                  <CheckCircle2 className="w-6 h-6" />
+                </div>
+                <h4 className="font-bold text-base text-slate-900">Owner Notified Successfully!</h4>
+                <p className="text-xs text-slate-600 max-w-sm mx-auto">
+                  A personal alert with the exact room and your message has been sent to the student who reported losing this item.
+                </p>
+                <button
+                  onClick={() => {
+                    setIsSightingModalOpen(false);
+                    setSightingSuccess(false);
+                  }}
+                  className="px-5 py-2.5 rounded-xl bg-blue-600 text-white text-xs font-semibold shadow-xs"
+                >
+                  Done
+                </button>
+              </div>
+            ) : (
+              <form
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  if (!sightingLocation.trim() || !sightingNote.trim()) return;
+                  setIsSightingSubmitting(true);
+                  try {
+                    await reportSighting(item.id, {
+                      location: sightingLocation.trim(),
+                      note: sightingNote.trim(),
+                      imageUrl: sightingImage || undefined
+                    });
+                    setSightingSuccess(true);
+                    setSightingLocation('');
+                    setSightingNote('');
+                    setSightingImage('');
+                  } catch (err) {
+                    console.error('Failed to send sighting ping:', err);
+                  } finally {
+                    setIsSightingSubmitting(false);
+                  }
+                }}
+                className="space-y-4 text-xs"
+              >
+                <div className="p-3 bg-rose-50/70 border border-rose-200/60 rounded-xl space-y-1">
+                  <span className="font-bold text-[#D64545] block">Lost Item Reference:</span>
+                  <p className="text-slate-700">{item.title} ({item.referenceNumber})</p>
+                  <p className="text-[11px] text-slate-500">Reported last seen around: {item.location}</p>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="block font-bold text-slate-800">
+                    Where is it right now? (Specific Room / Desk / Floor) *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Room 402, 3rd row desk near window, OR Deposited at Central Library desk"
+                    value={sightingLocation}
+                    onChange={(e) => setSightingLocation(e.target.value)}
+                    className="w-full p-2.5 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-rose-500/20"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="block font-bold text-slate-800">
+                    Message / Instructions for the Owner *
+                  </label>
+                  <textarea
+                    rows={3}
+                    required
+                    placeholder="e.g. I saw it on the bench 10 mins ago. Handed it over to the floor peon / left it on desk #4."
+                    value={sightingNote}
+                    onChange={(e) => setSightingNote(e.target.value)}
+                    className="w-full p-2.5 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-rose-500/20"
+                  />
+                </div>
+
+                {/* Optional Sighting Photo */}
+                <div className="space-y-1.5">
+                  <label className="block font-bold text-slate-800">
+                    Photo of Item at Location (Optional)
+                  </label>
+                  {sightingImage ? (
+                    <div className="relative rounded-xl overflow-hidden border border-slate-200 w-32 h-24">
+                      <img src={sightingImage} alt="Sighting preview" className="w-full h-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => setSightingImage('')}
+                        className="absolute top-1 right-1 p-1 bg-black/60 rounded-full text-white hover:bg-black"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ) : (
+                    <label className="cursor-pointer inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 hover:bg-slate-100 text-slate-700 font-medium">
+                      <Camera className="w-4 h-4 text-slate-600" />
+                      <span>Take Photo or Upload Image</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        capture="environment"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onloadend = () => setSightingImage(reader.result as string);
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                        className="hidden"
+                      />
+                    </label>
+                  )}
+                  <p className="text-[11px] text-slate-400">Attaching a quick photo helps the owner confirm it's theirs.</p>
+                </div>
+
+                <div className="flex gap-2 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsSightingModalOpen(false)}
+                    className="flex-1 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-600 hover:bg-slate-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSightingSubmitting}
+                    className="flex-1 py-2.5 rounded-xl bg-[#D64545] hover:bg-[#b83838] text-white text-xs font-semibold disabled:opacity-50 shadow-sm flex items-center justify-center gap-1.5"
+                  >
+                    <Send className="w-3.5 h-3.5" />
+                    <span>{isSightingSubmitting ? 'Sending Alert...' : 'Ping Owner'}</span>
                   </button>
                 </div>
               </form>

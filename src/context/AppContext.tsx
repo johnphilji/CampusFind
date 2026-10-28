@@ -40,6 +40,7 @@ interface AppContextType {
   submitClaim: (itemId: string, details: { name: string; email: string; studentId: string; proof: string }) => Promise<ClaimRecord>;
   updateClaimStatus: (claimId: string, status: ClaimRecord['status'], notes?: string) => Promise<void>;
   addClaimMessage: (claimId: string, text: string, sender: 'admin' | 'claimant') => Promise<void>;
+  reportSighting: (itemId: string, details: { location: string; note: string; imageUrl?: string }) => Promise<void>;
   markNotificationRead: (id: string) => void;
   markAllNotificationsRead: () => void;
   unreadCount: number;
@@ -450,6 +451,50 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
+  const reportSighting = async (itemId: string, details: { location: string; note: string; imageUrl?: string }): Promise<void> => {
+    const targetItem = items.find(i => i.id === itemId);
+    const itemTitle = targetItem ? targetItem.title : 'Lost Item';
+    const finderName = user.name || 'A fellow student';
+
+    // 1. Notify the owner who lost the item
+    const notif: AppNotification = {
+      id: `notif-${Date.now()}`,
+      title: `📍 Sighting Reported for "${itemTitle}"!`,
+      message: `${finderName} reported finding your item at: "${details.location}". Note: "${details.note}"`,
+      timestamp: 'Just now',
+      read: false,
+      type: 'match',
+      targetId: itemId
+    };
+    setNotifications(prev => [notif, ...prev]);
+
+    // 2. Also create an internal claim/ping record for audit and tracking
+    const sightingClaim: ClaimRecord = {
+      id: `SIGHT-${Date.now().toString().slice(-4)}`,
+      itemId,
+      claimantName: finderName,
+      claimantEmail: user.email || 'finder@college.edu',
+      claimantId: user.studentId || user.id || 'finder-1',
+      proofDetails: `Found at: ${details.location}. Finder Note: ${details.note}`,
+      status: 'Submitted',
+      submittedAt: new Date().toLocaleDateString(),
+      itemTitle,
+      itemType: 'lost',
+      itemLocation: details.location,
+      itemImageUrl: details.imageUrl || targetItem?.imageUrl,
+      messages: [
+        {
+          id: `msg-${Date.now()}`,
+          sender: 'claimant',
+          text: `I spotted your item at ${details.location}. ${details.note}`,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        }
+      ]
+    };
+    setClaims(prev => [sightingClaim, ...prev]);
+    updateItemStatus(itemId, 'under_review');
+  };
+
   // Dynamically calculate potential matches between open lost items and open found items
   const dynamicMatches = useMemo<MatchSuggestion[]>(() => {
     const lostItems = items.filter(i => i.type === 'lost' && i.status === 'open');
@@ -541,6 +586,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         submitClaim,
         updateClaimStatus,
         addClaimMessage,
+        reportSighting,
         markNotificationRead,
         markAllNotificationsRead,
         unreadCount,
