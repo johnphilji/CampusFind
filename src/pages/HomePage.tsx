@@ -205,7 +205,7 @@ export const HomePage: React.FC = () => {
             <div>
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-200/80 text-amber-900">
-                  Potential Match Suggestion (Demo)
+                  Potential Match Suggestion
                 </span>
                 <span className="text-[10px] text-[#70798B]">{matches[0].createdAt}</span>
               </div>

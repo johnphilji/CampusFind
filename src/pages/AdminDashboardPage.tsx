@@ -31,7 +31,9 @@ import {
   AlertCircle,
   Package,
   Layers,
-  Inbox
+  Inbox,
+  MessageSquare,
+  Send
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { getFullImageUrl } from '../services/api';
@@ -55,7 +57,7 @@ const getCategoryIcon = (category?: string) => {
 };
 
 export const AdminDashboardPage: React.FC = () => {
-  const { claims, items, updateClaimStatus, updateItemStatus, user, logout, refreshData } = useApp();
+  const { claims, items, updateClaimStatus, updateItemStatus, addClaimMessage, user, logout, refreshData } = useApp();
   const navigate = useNavigate();
 
   // States
@@ -64,6 +66,7 @@ export const AdminDashboardPage: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [expandedClaimId, setExpandedClaimId] = useState<string | null>(null);
   const [adminNote, setAdminNote] = useState('');
+  const [chatInputs, setChatInputs] = useState<{ [claimId: string]: string }>({});
   const [showRejectModal, setShowRejectModal] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState('');
   const [activePhotoModal, setActivePhotoModal] = useState<string | null>(null);
@@ -753,6 +756,77 @@ export const AdminDashboardPage: React.FC = () => {
                             <div className="flex items-center gap-2">
                               <span className="text-slate-500">Current Item Status:</span>
                               <span className="font-bold text-amber-600 uppercase text-[11px]">{claim.itemStatus}</span>
+                            </div>
+                          </div>
+
+                          {/* Interactive Verification Chat & Question Thread */}
+                          <div className="bg-white rounded-xl p-4 border border-blue-100 shadow-2xs space-y-3">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <MessageSquare className="w-4 h-4 text-blue-600" />
+                                <span className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+                                  Inquiry Chat & Verification Questions
+                                </span>
+                              </div>
+                              <span className="text-[10px] text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full font-medium">
+                                Direct with Student
+                              </span>
+                            </div>
+
+                            {/* Message Thread */}
+                            <div className="space-y-2 max-h-48 overflow-y-auto p-2 bg-slate-50/70 rounded-xl border border-slate-100">
+                              {claim.messages && claim.messages.length > 0 ? (
+                                claim.messages.map((msg) => (
+                                  <div
+                                    key={msg.id}
+                                    className={`p-2.5 rounded-xl text-xs max-w-[85%] ${
+                                      msg.sender === 'admin'
+                                        ? 'ml-auto bg-blue-600 text-white rounded-tr-none'
+                                        : 'mr-auto bg-white text-slate-800 border border-slate-200 rounded-tl-none shadow-2xs'
+                                    }`}
+                                  >
+                                    <div className="flex items-center justify-between gap-3 text-[10px] opacity-80 mb-0.5">
+                                      <span className="font-bold">{msg.sender === 'admin' ? 'Admin Desk' : claim.claimantName}</span>
+                                      <span>{msg.timestamp}</span>
+                                    </div>
+                                    <p className="leading-relaxed">{msg.text}</p>
+                                  </div>
+                                ))
+                              ) : (
+                                <p className="text-[11px] text-slate-400 text-center py-2 italic">
+                                  No inquiries asked yet. You can ask follow-up questions before approving.
+                                </p>
+                              )}
+                            </div>
+
+                            {/* Chat Input */}
+                            <div className="flex gap-2">
+                              <input
+                                type="text"
+                                placeholder="Ask claimant a verification question (e.g. Can you describe stickers/lockscreen?)..."
+                                value={chatInputs[claim.id] || ''}
+                                onChange={(e) => setChatInputs(prev => ({ ...prev, [claim.id]: e.target.value }))}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter' && (chatInputs[claim.id] || '').trim()) {
+                                    addClaimMessage(claim.id, chatInputs[claim.id].trim(), 'admin');
+                                    setChatInputs(prev => ({ ...prev, [claim.id]: '' }));
+                                  }
+                                }}
+                                className="flex-1 text-xs px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  if ((chatInputs[claim.id] || '').trim()) {
+                                    addClaimMessage(claim.id, chatInputs[claim.id].trim(), 'admin');
+                                    setChatInputs(prev => ({ ...prev, [claim.id]: '' }));
+                                  }
+                                }}
+                                className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer"
+                              >
+                                <Send className="w-3.5 h-3.5" />
+                                <span>Send</span>
+                              </button>
                             </div>
                           </div>
 

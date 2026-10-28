@@ -118,7 +118,9 @@ export const ReportItemPage: React.FC = () => {
         }
       }
 
-      const finalLocation = location === 'Other Campus Area' && customLocation ? customLocation : location;
+      const finalLocation = customLocation.trim()
+        ? `${location} (${customLocation.trim()})`
+        : location;
       const created = await addItem({
         title,
         type: reportType,
@@ -379,8 +381,10 @@ export const ReportItemPage: React.FC = () => {
             </div>
 
             {/* Campus Location */}
-            <div className="space-y-1.5">
-              <label className="block text-xs font-bold text-[#172033]">Campus Location *</label>
+            <div className="space-y-2">
+              <label className="block text-xs font-bold text-[#172033]">
+                {reportType === 'found' ? 'Where Did You Find It? (Campus Area & Exact Spot) *' : 'Where Was It Lost? *'}
+              </label>
               <select
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
@@ -390,15 +394,24 @@ export const ReportItemPage: React.FC = () => {
                   <option key={loc} value={loc}>{loc}</option>
                 ))}
               </select>
-              {location === 'Other Campus Area' && (
-                <input
-                  type="text"
-                  placeholder="Specify exact building, floor, room or lawn..."
-                  value={customLocation}
-                  onChange={(e) => setCustomLocation(e.target.value)}
-                  className="w-full p-2.5 mt-2 rounded-xl border border-[#E7EAF1] text-xs sm:text-sm text-[#172033] focus:outline-none focus:ring-2 focus:ring-[#3559C7]/20"
-                />
-              )}
+
+              {/* Specific Sublocation / Spot Finder */}
+              <input
+                type="text"
+                placeholder={
+                  reportType === 'found'
+                    ? "Specific Spot (e.g., Table 4 in Reading Hall, 3rd row Bench, near Water Cooler)..."
+                    : "Specific Spot (e.g., 2nd floor lab, locker room, lawn bench)..."
+                }
+                value={customLocation}
+                onChange={(e) => setCustomLocation(e.target.value)}
+                className="w-full p-2.5 rounded-xl border border-[#E7EAF1] text-xs sm:text-sm text-[#172033] bg-slate-50/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#3559C7]/20"
+              />
+              <p className="text-[11px] text-[#70798B]">
+                {reportType === 'found' 
+                  ? 'Adding the exact desk, floor, or corner helps the owner identify their item quickly.'
+                  : 'Mentioning the exact classroom, lab bench, or area helps staff locate it.'}
+              </p>
             </div>
 
             {/* Date and Time Lost or Found */}

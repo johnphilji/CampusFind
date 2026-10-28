@@ -33,6 +33,12 @@ export const ItemDetailsPage: React.FC = () => {
   // Check if current user or another student has already filed a claim or if item is already claimed
   const existingUserClaim = claims.find(c => (c.itemId === id || c.itemId === item?.id) && (c.claimantId === user.id || c.claimantEmail === user.email));
   const hasApprovedClaim = claims.some(c => (c.itemId === id || c.itemId === item?.id) && (c.status === 'Approved' || c.status === 'Item Returned'));
+  const isFinder = Boolean(
+    user?.id && (
+      item?.reporterId === user.id || 
+      (item?.reporterEmail && user?.email && item.reporterEmail.toLowerCase() === user.email.toLowerCase())
+    )
+  );
 
   // Claim modal state
   const [isClaimModalOpen, setIsClaimModalOpen] = useState(false);
@@ -271,6 +277,16 @@ export const ItemDetailsPage: React.FC = () => {
                 >
                   Track in Dashboard
                 </Link>
+              </div>
+            ) : isFinder ? (
+              <div className="p-4 rounded-2xl bg-slate-100 text-slate-800 border border-slate-200 flex items-center gap-3">
+                <ShieldCheck className="w-5 h-5 text-blue-600 flex-shrink-0" />
+                <div>
+                  <span className="font-bold text-xs sm:text-sm block">You reported finding this item</span>
+                  <span className="text-xs text-slate-500">
+                    As the finder, you cannot submit an ownership claim for an item you handed in.
+                  </span>
+                </div>
               </div>
             ) : item.type === 'found' ? (
               <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-gradient-to-r from-[#E8EEFF]/80 to-white p-4 rounded-2xl border border-[#3559C7]/20">

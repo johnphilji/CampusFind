@@ -101,5 +101,11 @@ export interface ClaimRecord {
   reportStatus?: ItemStatus;
   adminNotes?: string;
   verificationMethod?: 'Serial / IMEI Number' | 'Photo ID Match' | 'Device Passcode / Unlock' | 'Unique Markings';
+  messages?: {
+    id: string;
+    sender: 'admin' | 'claimant';
+    text: string;
+    timestamp: string;
+  }[];
 }
 

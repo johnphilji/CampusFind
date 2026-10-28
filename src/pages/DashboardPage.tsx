@@ -9,14 +9,17 @@ import {
   Plus,
   Clock,
   ArrowRight,
-  FolderOpen
+  FolderOpen,
+  MessageSquare,
+  Send
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { StatusBadge, TypeBadge } from '../components/cards/Badges';
 
 export const DashboardPage: React.FC = () => {
-  const { items, claims, matches, user } = useApp();
+  const { items, claims, matches, user, addClaimMessage } = useApp();
   const [activeTab, setActiveTab] = useState<'all' | 'lost' | 'found' | 'claims'>('all');
+  const [replyInputs, setReplyInputs] = useState<{ [claimId: string]: string }>({});
 
   const userFirstName = user.name ? user.name.split(' ')[0].toLowerCase() : '';
   const myReports = items.filter(i => {
@@ -269,6 +272,69 @@ export const DashboardPage: React.FC = () => {
                     <strong>Admin Note:</strong> {claim.adminNotes}
                   </div>
                 )}
+
+                {/* Verification Inquiry Chat with Admin */}
+                <div className="p-3 rounded-xl bg-blue-50/50 border border-blue-100 space-y-2">
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-blue-900">
+                    <MessageSquare className="w-3.5 h-3.5 text-blue-600" />
+                    <span>Admin Desk Verification Messages</span>
+                  </div>
+
+                  {claim.messages && claim.messages.length > 0 ? (
+                    <div className="space-y-1.5 max-h-40 overflow-y-auto">
+                      {claim.messages.map((m) => (
+                        <div
+                          key={m.id}
+                          className={`p-2 rounded-lg text-xs max-w-[90%] ${
+                            m.sender === 'claimant'
+                              ? 'ml-auto bg-blue-600 text-white'
+                              : 'mr-auto bg-white text-slate-800 border border-slate-200'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between gap-2 text-[10px] opacity-75 mb-0.5">
+                            <span className="font-semibold">{m.sender === 'claimant' ? 'You' : 'Admin Staff'}</span>
+                            <span>{m.timestamp}</span>
+                          </div>
+                          <p>{m.text}</p>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-[11px] text-slate-500 italic">
+                      No questions asked by Admin yet. If additional proof is requested, it will appear here.
+                    </p>
+                  )}
+
+                  {/* Reply Input */}
+                  <div className="flex gap-2 pt-1">
+                    <input
+                      type="text"
+                      placeholder="Reply or provide additional details to admin..."
+                      value={replyInputs[claim.id] || ''}
+                      onChange={(e) => setReplyInputs(prev => ({ ...prev, [claim.id]: e.target.value }))}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && (replyInputs[claim.id] || '').trim()) {
+                          addClaimMessage(claim.id, replyInputs[claim.id].trim(), 'claimant');
+                          setReplyInputs(prev => ({ ...prev, [claim.id]: '' }));
+                        }
+                      }}
+                      className="flex-1 text-xs px-3 py-1.5 rounded-lg border border-slate-200 bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if ((replyInputs[claim.id] || '').trim()) {
+                          addClaimMessage(claim.id, replyInputs[claim.id].trim(), 'claimant');
+                          setReplyInputs(prev => ({ ...prev, [claim.id]: '' }));
+                        }
+                      }}
+                      className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold flex items-center gap-1 transition-colors"
+                    >
+                      <Send className="w-3 h-3" />
+                      <span>Reply</span>
+                    </button>
+                  </div>
+                </div>
               </div>
             ))}
           </div>

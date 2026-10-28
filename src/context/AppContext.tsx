@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import { CampusItem, AppNotification, ClaimRecord, MatchSuggestion } from '../types';
 import { INITIAL_ITEMS, INITIAL_NOTIFICATIONS, INITIAL_CLAIMS, INITIAL_MATCHES } from '../data/mockData';
 import { api, getFullImageUrl } from '../services/api';
@@ -39,6 +39,7 @@ interface AppContextType {
   updateItemStatus: (id: string, status: CampusItem['status'], notes?: string) => Promise<void>;
   submitClaim: (itemId: string, details: { name: string; email: string; studentId: string; proof: string }) => Promise<ClaimRecord>;
   updateClaimStatus: (claimId: string, status: ClaimRecord['status'], notes?: string) => Promise<void>;
+  addClaimMessage: (claimId: string, text: string, sender: 'admin' | 'claimant') => Promise<void>;
   markNotificationRead: (id: string) => void;
   markAllNotificationsRead: () => void;
   unreadCount: number;
@@ -410,6 +411,102 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
+  const addClaimMessage = async (claimId: string, text: string, sender: 'admin' | 'claimant'): Promise<void> => {
+    const newMessage = {
+      id: `msg-${Date.now()}`,
+      sender,
+      text,
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    };
+
+    setClaims(prev => {
+      const updated = prev.map(c => {
+        if (c.id === claimId) {
+          const currentMsgs = c.messages || [];
+          return {
+            ...c,
+            status: sender === 'admin' ? ('More Information Required' as const) : ('Under Review' as const),
+            messages: [...currentMsgs, newMessage]
+          };
+        }
+        return c;
+      });
+      localStorage.setItem('cf_claims', JSON.stringify(updated));
+      return updated;
+    });
+
+    const targetClaim = claims.find(c => c.id === claimId);
+    if (targetClaim) {
+      const notif: AppNotification = {
+        id: `notif-${Date.now()}`,
+        title: sender === 'admin' ? 'New Message from Admin Desk' : 'Student Responded to Claim Inquiry',
+        message: text.length > 60 ? `${text.slice(0, 60)}...` : text,
+        timestamp: 'Just now',
+        read: false,
+        type: 'message',
+        targetId: targetClaim.itemId
+      };
+      setNotifications(prev => [notif, ...prev]);
+    }
+  };
+
+  // Dynamically calculate potential matches between open lost items and open found items
+  const dynamicMatches = useMemo<MatchSuggestion[]>(() => {
+    const lostItems = items.filter(i => i.type === 'lost' && i.status === 'open');
+    const foundItems = items.filter(i => i.type === 'found' && (i.status === 'open' || i.status === 'under_review'));
+
+    const results: MatchSuggestion[] = [];
+
+    for (const lost of lostItems) {
+      const lostWords = lost.title.toLowerCase().split(/\s+/).filter(w => w.length > 2);
+      
+      for (const found of foundItems) {
+        let score = 0;
+        const reasons: string[] = [];
+
+        // 1. Same category is a strong signal (+40 points)
+        if (lost.category && found.category && lost.category.toLowerCase() === found.category.toLowerCase()) {
+          score += 40;
+          reasons.push(`Matching category (${found.category})`);
+        }
+
+        // 2. Keyword overlap in title/description (+30 points)
+        const foundText = `${found.title} ${found.description}`.toLowerCase();
+        const matchedWords = lostWords.filter(w => foundText.includes(w));
+        if (matchedWords.length > 0) {
+          score += Math.min(35, matchedWords.length * 15);
+          reasons.push(`Keywords match: "${matchedWords.join(', ')}"`);
+        }
+
+        // 3. Similar campus location (+25 points)
+        if (lost.location && found.location) {
+          const lLoc = lost.location.toLowerCase();
+          const fLoc = found.location.toLowerCase();
+          if (lLoc === fLoc || lLoc.includes(fLoc) || fLoc.includes(lLoc)) {
+            score += 25;
+            reasons.push(`Similar location (${found.location})`);
+          }
+        }
+
+        // If score is 50% or above, consider it a potential match
+        if (score >= 50) {
+          results.push({
+            id: `match-${lost.id}-${found.id}`,
+            lostItemId: lost.id,
+            foundItemId: found.id,
+            similarityScore: Math.min(score, 96),
+            reason: reasons.join(' • '),
+            lostItem: lost,
+            foundItem: found,
+            createdAt: 'Recent match'
+          });
+        }
+      }
+    }
+
+    return results;
+  }, [items]);
+
   const markNotificationRead = (id: string) => {
     setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
     if (api.getToken()) {
@@ -432,7 +529,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         items,
         notifications,
         claims,
-        matches,
+        matches: dynamicMatches,
         user,
         isAuthenticated,
         activeRole,
@@ -443,6 +540,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         updateItemStatus,
         submitClaim,
         updateClaimStatus,
+        addClaimMessage,
         markNotificationRead,
         markAllNotificationsRead,
         unreadCount,

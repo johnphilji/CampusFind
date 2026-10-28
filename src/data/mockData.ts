@@ -3,22 +3,22 @@ import { CampusItem, AppNotification, ClaimRecord, MatchSuggestion } from '../ty
 export const INITIAL_ITEMS: CampusItem[] = [
   {
     id: 'item-1',
-    title: 'Samsung Galaxy M31 (Blue)',
+    title: 'Dell 65W USB-C Laptop Charger',
     type: 'found',
     category: 'Electronics',
-    location: 'Near Sports Pavilion',
+    location: 'Computer & IT Lab',
     date: '2026-10-20',
     timeAgo: '2 hours ago',
-    description: 'Found on the bench near the synthetic court. Has a dark blue case with a small sticker on the corner. Screen lock is enabled.',
-    imageUrl: 'https://images.unsplash.com/photo-1598327105666-5b89351aff97?auto=format&fit=crop&w=600&q=80',
+    description: 'Found plugged into desk station 12 in Computer Lab 3. Has a black velcro strap and minor scuff on the adapter.',
+    imageUrl: 'https://images.unsplash.com/photo-1583863788434-e58a36330cf0?auto=format&fit=crop&w=600&q=80',
     status: 'open',
     reporterName: 'Ameya Das',
     reporterDepartment: 'CSE 3rd Year',
     referenceNumber: 'CF-2026-0891',
-    identifyingQuestion: 'What sticker is on the phone case?',
-    possibleMatchCount: 1,
-    securityLevel: 'valuable_secure',
-    custodyLocation: 'Campus Security HQ (Central Safe)',
+    identifyingQuestion: 'What color is the velcro cable tie and serial prefix?',
+    possibleMatchCount: 0,
+    securityLevel: 'standard',
+    custodyLocation: 'Departmental Front Desk',
     daysRetained: 2,
   },
   {
@@ -208,12 +208,12 @@ export const INITIAL_CLAIMS: ClaimRecord[] = [
     claimantName: 'Rohan Gupta',
     claimantEmail: 'r.gupta@college.edu',
     claimantId: 'IEC2021077',
-    proofDetails: 'Lock screen wallpaper is an anime character (Goku). Blue silicone case with Manchester United crest sticker.',
+    proofDetails: 'Dell black adapter with original gray embossed Dell logo, black velcro strap wrapped twice around the cord.',
     status: 'Submitted',
     submittedAt: '2026-10-20 01:15 PM',
-    itemTitle: 'Samsung Galaxy M31 (Blue)',
+    itemTitle: 'Dell 65W USB-C Laptop Charger',
     itemType: 'found',
-    itemLocation: 'Near Sports Pavilion',
+    itemLocation: 'Computer & IT Lab',
   },
   {
     id: 'CLM-1044',
@@ -231,18 +231,7 @@ export const INITIAL_CLAIMS: ClaimRecord[] = [
   }
 ];
 
-export const INITIAL_MATCHES: MatchSuggestion[] = [
-  {
-    id: 'match-1',
-    lostItemId: 'item-3',
-    foundItemId: 'item-1',
-    similarityScore: 92,
-    reason: 'Both reports filed on 2026-10-20 around CC3/Pavilion area within 2 hours.',
-    lostItem: INITIAL_ITEMS[2],
-    foundItem: INITIAL_ITEMS[0],
-    createdAt: 'Today, 2:15 PM'
-  }
-];
+export const INITIAL_MATCHES: MatchSuggestion[] = [];
 
 export const CAMPUS_LOCATIONS = [
   'Central Library',
