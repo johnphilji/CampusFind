@@ -1,5 +1,6 @@
 # CampusFind — College Lost & Found Cloud Application
 
+GrowthX Club Code - JX6G4A
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Cloud](https://img.shields.io/badge/AWS-ap--south--1-orange.svg)](https://aws.amazon.com/)
 [![Node](https://img.shields.io/badge/Node.js-v20-green.svg)](https://nodejs.org/)
